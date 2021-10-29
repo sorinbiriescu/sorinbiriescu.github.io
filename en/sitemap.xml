@@ -1,75 +1,47 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  
   <url>
-    <loc>https://sorinbiriescu.github.io/en/</loc>
-    <lastmod>2020-09-15T11:30:03+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://sorinbiriescu.github.io/tags/first/</loc>
-    <lastmod>2020-09-15T11:30:03+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://sorinbiriescu.github.io/en/projects/project1/</loc>
-    <lastmod>2020-09-15T11:30:03+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://sorinbiriescu.github.io/</loc>
-    <lastmod>2020-09-15T11:30:03+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="fr"
-                href="https://sorinbiriescu.github.io/fr/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://sorinbiriescu.github.io/"
-                />
-  </url>
-  
-  <url>
-    <loc>https://sorinbiriescu.github.io/tags/</loc>
-    <lastmod>2020-09-15T11:30:03+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="fr"
-                href="https://sorinbiriescu.github.io/fr/tags/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://sorinbiriescu.github.io/tags/"
-                />
-  </url>
-  
-  <url>
-    <loc>https://sorinbiriescu.github.io/en/skills/</loc>
-  </url>
-  
-  <url>
-    <loc>https://sorinbiriescu.github.io/fr/projets/bio/competences/</loc>
-  </url>
-  
-  <url>
-    <loc>https://sorinbiriescu.github.io/main/</loc>
+    <loc>https://sorinbiriescu.github.io/en/projects/</loc>
     <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://sorinbiriescu.github.io/contact/</loc>
-  </url>
-  
-  <url>
+    <xhtml:link
+                rel="alternate"
+                hreflang="fr"
+                href="https://sorinbiriescu.github.io/fr/projects/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://sorinbiriescu.github.io/en/projects/"
+                />
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/altair/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/projects/apollo/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="fr"
+                href="https://sorinbiriescu.github.io/fr/projects/apollo/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://sorinbiriescu.github.io/en/projects/apollo/"
+                />
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/bio/</loc>
-  </url>
-  
-  <url>
-    <loc>https://sorinbiriescu.github.io/categories/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="fr"
+                href="https://sorinbiriescu.github.io/fr/bio/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://sorinbiriescu.github.io/en/bio/"
+                />
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/categories/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
@@ -78,12 +50,89 @@
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="https://sorinbiriescu.github.io/categories/"
+                href="https://sorinbiriescu.github.io/en/categories/"
+                />
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/contact/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="fr"
+                href="https://sorinbiriescu.github.io/fr/contact/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://sorinbiriescu.github.io/en/contact/"
+                />
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/dask/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/data-analysis/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/data-visualisation/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/data-wrangling/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/docker/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/javascript/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/pandas/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/plotly/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/prefect/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/python/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/react/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/series/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="fr"
+                href="https://sorinbiriescu.github.io/fr/series/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://sorinbiriescu.github.io/en/series/"
+                />
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/skills/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="fr"
+                href="https://sorinbiriescu.github.io/fr/skills/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://sorinbiriescu.github.io/en/skills/"
+                />
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="fr"
+                href="https://sorinbiriescu.github.io/fr/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://sorinbiriescu.github.io/en/"
+                />
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="fr"
+                href="https://sorinbiriescu.github.io/fr/tags/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://sorinbiriescu.github.io/en/tags/"
                 />
   </url>
-  
-  <url>
-    <loc>https://sorinbiriescu.github.io/fr/</loc>
-  </url>
-  
 </urlset>
