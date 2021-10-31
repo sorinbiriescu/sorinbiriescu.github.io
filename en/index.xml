@@ -10,16 +10,6 @@
     </image>
     <generator>Hugo -- gohugo.io</generator><atom:link href="https://sorinbiriescu.github.io/en/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title></title>
-      <link>https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/</guid>
-      <description>Call analyzer and manpower estimator This is based on one of my previous analyses for my clients. The situation is as follows: my client has an IT support department which receives telephone calls for support request. The team providing support is limited due to budget constraints and needs to do also onsite support as well as the aforementioned remote support.
-My client wants to know how many persons should be available to pickup telephone calls in certain periods (hour interval, days of the week, month) in order to properly assign the technicians to either provide remote support when needed or go onsite.</description>
-    </item>
-    
-    <item>
       <title>Apollo</title>
       <link>https://sorinbiriescu.github.io/en/projects/apollo/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -36,6 +26,15 @@ My client wants to know how many persons should be available to pickup telephone
       <guid>https://sorinbiriescu.github.io/en/bio/</guid>
       <description>Domaines d’intérêt Infogérance // Data Analytics // Data Science
 Competences Data analytics  Analyse processus du client Agrégation, préparation et analysé des données Modélisation Visualisation des données Création solutions complètes d’analyse (de collection des données vers plateforme pour consommer les données selon les besoins du service)  Gestion &amp;amp; Pilotage  Gestion des opérations Conception, planning et suivi des projets Gestion de l’équipe (planning, gestion du conflit, formation) Conception / suivi de budget et flux de trésorerie Gestion relation avec le client Animation de comités (pilotage, technique)  </description>
+    </item>
+    
+    <item>
+      <title>Call analyzer - Time series analysis</title>
+      <link>https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/</guid>
+      <description>Analyzing calls volume and estimating manpower</description>
     </item>
     
     <item>

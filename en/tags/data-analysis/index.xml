@@ -18,5 +18,14 @@
       <description>An analytical application for a not so easy team and operations management</description>
     </item>
     
+    <item>
+      <title>Call analyzer - Time series analysis</title>
+      <link>https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/</guid>
+      <description>Analyzing calls volume and estimating manpower</description>
+    </item>
+    
   </channel>
 </rss>
