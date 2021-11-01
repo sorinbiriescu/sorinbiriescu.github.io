@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Sorin BIRIESCU</title>
+    <link>https://sorinbiriescu.github.io/en/</link>
+    <description>Recent content on Sorin BIRIESCU</description>
+    <image>
+      <url>https://sorinbiriescu.github.io/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url>
+      <link>https://sorinbiriescu.github.io/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
+    </image>
+    <generator>Hugo -- gohugo.io</generator><atom:link href="https://sorinbiriescu.github.io/en/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Apollo</title>
+      <link>https://sorinbiriescu.github.io/en/projects/apollo/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://sorinbiriescu.github.io/en/projects/apollo/</guid>
+      <description>An analytical application for a not so easy team and operations management</description>
+    </item>
+    
+    <item>
+      <title>Bio</title>
+      <link>https://sorinbiriescu.github.io/en/bio/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://sorinbiriescu.github.io/en/bio/</guid>
+      <description>Domaines d’intérêt Infogérance // Data Analytics // Data Science
+Competences Data analytics  Analyse processus du client Agrégation, préparation et analysé des données Modélisation Visualisation des données Création solutions complètes d’analyse (de collection des données vers plateforme pour consommer les données selon les besoins du service)  Gestion &amp;amp; Pilotage  Gestion des opérations Conception, planning et suivi des projets Gestion de l’équipe (planning, gestion du conflit, formation) Conception / suivi de budget et flux de trésorerie Gestion relation avec le client Animation de comités (pilotage, technique)  </description>
+    </item>
+    
+    <item>
+      <title>Call analyzer and estimator</title>
+      <link>https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/</guid>
+      <description>Time series analysis on support calls</description>
+    </item>
+    
+    <item>
+      <title>Contact</title>
+      <link>https://sorinbiriescu.github.io/en/contact/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://sorinbiriescu.github.io/en/contact/</guid>
+      <description> sorin.biriescu@gmail.com LinkedIn GitHub  </description>
+    </item>
+    
+    <item>
+      <title>Skills</title>
+      <link>https://sorinbiriescu.github.io/en/skills/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://sorinbiriescu.github.io/en/skills/</guid>
+      <description>Relevant projects are posted under each skill. You can also use the Skill Tags page to see all the occurences of a particular skill.
+Query, scripting and programming languages    Skill Level Relevant project     SQL Intermediate Apollo   Python Intermediate Apollo   HTML / CSS Intermediate    Javascript Intermediate    Powershell Intermediate    Git Beginner    Bash Beginner    Batch Beginner     Relevant packages    Package Language Level Description Relevant project     Pandas Python Advanced Data analysis package Apollo   Altair Python Intermediate Data visualization package Apollo   Plotly Python Intermediate Data visualization package Apollo   Prefect Python Beginner Data flow automation Apollo   Dask Python Beginner Parallel computing Apollo   Scikit-learn Python Beginner Machine learning Apollo   React Javascript Intermediate Library Apollo    Products    Skill Level Relevant project     Docker Intermediate Apollo    Data    Area Level Relevant project     Data munging Intermediate Apollo   Data analysis Intermediate Apollo   Data visualization Intermediate Apollo   Machine Learning Beginner    AI Beginner     </description>
+    </item>
+    
+  </channel>
+</rss>
