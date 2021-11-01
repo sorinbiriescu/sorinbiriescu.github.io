@@ -53,18 +53,6 @@
                 href="https://sorinbiriescu.github.io/fr/projects/apollo/"
                 />
   </url><url>
-    <loc>https://sorinbiriescu.github.io/fr/contact/</loc>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://sorinbiriescu.github.io/en/contact/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="fr"
-                href="https://sorinbiriescu.github.io/fr/contact/"
-                />
-  </url><url>
     <loc>https://sorinbiriescu.github.io/fr/categories/</loc>
     <xhtml:link
                 rel="alternate"
@@ -76,6 +64,8 @@
                 hreflang="fr"
                 href="https://sorinbiriescu.github.io/fr/categories/"
                 />
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/fr/contact_fr/</loc>
   </url><url>
     <loc>https://sorinbiriescu.github.io/fr/series/</loc>
     <xhtml:link

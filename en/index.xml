@@ -24,7 +24,7 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://sorinbiriescu.github.io/en/bio/</guid>
-      <description>Domaines d’intérêt Infogérance // Data Analytics // Data Science
+      <description>Domaines d’intérêt Data Analytics // Data Science
 Competences Data analytics  Analyse processus du client Agrégation, préparation et analysé des données Modélisation Visualisation des données Création solutions complètes d’analyse (de collection des données vers plateforme pour consommer les données selon les besoins du service)  Gestion &amp;amp; Pilotage  Gestion des opérations Conception, planning et suivi des projets Gestion de l’équipe (planning, gestion du conflit, formation) Conception / suivi de budget et flux de trésorerie Gestion relation avec le client Animation de comités (pilotage, technique)  </description>
     </item>
     
@@ -39,10 +39,10 @@ Competences Data analytics  Analyse processus du client Agrégation, préparatio
     
     <item>
       <title>Contact</title>
-      <link>https://sorinbiriescu.github.io/en/contact/</link>
+      <link>https://sorinbiriescu.github.io/en/contact_en/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://sorinbiriescu.github.io/en/contact/</guid>
+      <guid>https://sorinbiriescu.github.io/en/contact_en/</guid>
       <description> sorin.biriescu@gmail.com LinkedIn GitHub  </description>
     </item>
     
@@ -53,7 +53,7 @@ Competences Data analytics  Analyse processus du client Agrégation, préparatio
       
       <guid>https://sorinbiriescu.github.io/en/skills/</guid>
       <description>Relevant projects are posted under each skill. You can also use the Skill Tags page to see all the occurences of a particular skill.
-Query, scripting and programming languages    Skill Level Relevant project     SQL Intermediate Apollo   Python Intermediate Apollo   HTML / CSS Intermediate    Javascript Intermediate    Powershell Intermediate    Git Beginner    Bash Beginner    Batch Beginner     Relevant packages    Package Language Level Description Relevant project     Pandas Python Advanced Data analysis package Apollo   Altair Python Intermediate Data visualization package Apollo   Plotly Python Intermediate Data visualization package Apollo   Prefect Python Beginner Data flow automation Apollo   Dask Python Beginner Parallel computing Apollo   Scikit-learn Python Beginner Machine learning Apollo   React Javascript Intermediate Library Apollo    Products    Skill Level Relevant project     Docker Intermediate Apollo    Data    Area Level Relevant project     Data munging Intermediate Apollo   Data analysis Intermediate Apollo   Data visualization Intermediate Apollo   Machine Learning Beginner    AI Beginner     </description>
+Query, scripting and programming languages    Skill Level Relevant project     SQL Intermediate Apollo   Python Intermediate Apollo, Call analyzer   HTML / CSS Intermediate Apollo   Javascript Intermediate Apollo   Powershell Intermediate    Git Beginner    Bash Beginner Apollo   Batch Beginner     Relevant packages    Package Language Level Description Relevant project     Pandas Python Advanced Data analysis package Apollo, Call analyzer   Altair Python Intermediate Data visualization package Apollo, Call analyzer   Plotly Python Intermediate Data visualization package Apollo   Prefect Python Beginner Data flow automation Apollo   Dask Python Beginner Parallel computing Apollo   Scikit-learn Python Beginner Machine learning Apollo   React Javascript Intermediate Library Apollo    Products    Skill Level Relevant project     Docker Intermediate Apollo    Data    Area Level Relevant project     Data munging Intermediate Apollo, Call analyzer   Data analysis Intermediate Apollo, Call analyzer   Data visualization Intermediate Apollo, Call analyzer   Machine Learning Beginner    AI Beginner     </description>
     </item>
     
   </channel>

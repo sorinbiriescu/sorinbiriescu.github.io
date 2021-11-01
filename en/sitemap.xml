@@ -55,17 +55,7 @@
                 href="https://sorinbiriescu.github.io/en/categories/"
                 />
   </url><url>
-    <loc>https://sorinbiriescu.github.io/en/contact/</loc>
-    <xhtml:link
-                rel="alternate"
-                hreflang="fr"
-                href="https://sorinbiriescu.github.io/fr/contact/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://sorinbiriescu.github.io/en/contact/"
-                />
+    <loc>https://sorinbiriescu.github.io/en/contact_en/</loc>
   </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/dask/</loc>
   </url><url>
