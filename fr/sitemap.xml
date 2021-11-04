@@ -4,16 +4,6 @@
   <url>
     <loc>https://sorinbiriescu.github.io/fr/bio/</loc>
     <priority>0</priority>
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://sorinbiriescu.github.io/en/bio/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="fr"
-                href="https://sorinbiriescu.github.io/fr/bio/"
-                />
   </url><url>
     <loc>https://sorinbiriescu.github.io/fr/projects/</loc>
     <priority>0</priority>

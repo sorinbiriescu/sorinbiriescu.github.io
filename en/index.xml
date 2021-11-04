@@ -19,16 +19,6 @@
     </item>
     
     <item>
-      <title>Bio</title>
-      <link>https://sorinbiriescu.github.io/en/bio/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://sorinbiriescu.github.io/en/bio/</guid>
-      <description>Domaines d’intérêt Data Analytics // Data Science
-Competences Data analytics  Analyse processus du client Agrégation, préparation et analysé des données Modélisation Visualisation des données Création solutions complètes d’analyse (de collection des données vers plateforme pour consommer les données selon les besoins du service)  Gestion &amp;amp; Pilotage  Gestion des opérations Conception, planning et suivi des projets Gestion de l’équipe (planning, gestion du conflit, formation) Conception / suivi de budget et flux de trésorerie Gestion relation avec le client Animation de comités (pilotage, technique)  </description>
-    </item>
-    
-    <item>
       <title>Call analyzer and estimator</title>
       <link>https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -44,6 +34,18 @@ Competences Data analytics  Analyse processus du client Agrégation, préparatio
       
       <guid>https://sorinbiriescu.github.io/en/contact_en/</guid>
       <description> sorin.biriescu@gmail.com LinkedIn GitHub  </description>
+    </item>
+    
+    <item>
+      <title>CV</title>
+      <link>https://sorinbiriescu.github.io/en/cv/cv/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://sorinbiriescu.github.io/en/cv/cv/</guid>
+      <description>Download the CV in PDF format
+Fields of interest Data Analytics / Data Science
+Professional experience Service Delivery Manager ECONOCOM - July 2018 – Sep 2021
+ Managed the technical support operations as per service contract Team management - shift planning, professional training, conflictmanagement Analysis and reporting (Python / Pandas) to upper management Developed an analytical application (Python / JS) to support theteam operations (see portfolio for further details)  Incident Manager ECONOCOM - Feb 2018 – July 2018</description>
     </item>
     
     <item>

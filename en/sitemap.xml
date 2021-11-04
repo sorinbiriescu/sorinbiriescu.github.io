@@ -2,6 +2,9 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://sorinbiriescu.github.io/en/cv/</loc>
+    <priority>0</priority>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/projects/</loc>
     <priority>0</priority>
     <xhtml:link
@@ -29,18 +32,6 @@
                 href="https://sorinbiriescu.github.io/en/projects/apollo/"
                 />
   </url><url>
-    <loc>https://sorinbiriescu.github.io/en/bio/</loc>
-    <xhtml:link
-                rel="alternate"
-                hreflang="fr"
-                href="https://sorinbiriescu.github.io/fr/bio/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://sorinbiriescu.github.io/en/bio/"
-                />
-  </url><url>
     <loc>https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/</loc>
   </url><url>
     <loc>https://sorinbiriescu.github.io/en/categories/</loc>
@@ -56,6 +47,8 @@
                 />
   </url><url>
     <loc>https://sorinbiriescu.github.io/en/contact_en/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/cv/cv/</loc>
   </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/dask/</loc>
   </url><url>
