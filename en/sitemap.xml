@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  
   <url>
     <loc>https://sorinbiriescu.github.io/en/cv/</loc>
     <priority>0</priority>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/projects/</loc>
     <priority>0</priority>
     <xhtml:link
@@ -20,13 +17,9 @@
                 hreflang="en"
                 href="https://sorinbiriescu.github.io/en/projects/"
                 />
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/altair/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/projects/apollo/</loc>
     <xhtml:link
                 rel="alternate"
@@ -38,13 +31,9 @@
                 hreflang="en"
                 href="https://sorinbiriescu.github.io/en/projects/apollo/"
                 />
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/categories/</loc>
     <xhtml:link
                 rel="alternate"
@@ -56,65 +45,35 @@
                 hreflang="en"
                 href="https://sorinbiriescu.github.io/en/categories/"
                 />
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/contact_en/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/cv/cv/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/dask/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/data-analysis/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/data-visualisation/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/data-wrangling/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/docker/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/javascript/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/pandas/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/plotly/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/prefect/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/python/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/react/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/projects/sql_queries/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/series/</loc>
     <xhtml:link
                 rel="alternate"
@@ -126,9 +85,7 @@
                 hreflang="en"
                 href="https://sorinbiriescu.github.io/en/series/"
                 />
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/skills/</loc>
     <xhtml:link
                 rel="alternate"
@@ -140,9 +97,7 @@
                 hreflang="en"
                 href="https://sorinbiriescu.github.io/en/skills/"
                 />
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/</loc>
     <xhtml:link
                 rel="alternate"
@@ -154,13 +109,9 @@
                 hreflang="en"
                 href="https://sorinbiriescu.github.io/en/"
                 />
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/sql/</loc>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/</loc>
     <xhtml:link
                 rel="alternate"
@@ -172,10 +123,7 @@
                 hreflang="en"
                 href="https://sorinbiriescu.github.io/en/tags/"
                 />
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/time-series/</loc>
   </url>
-  
 </urlset>

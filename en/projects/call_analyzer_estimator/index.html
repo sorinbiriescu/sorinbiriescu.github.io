@@ -1,29 +1,172 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Call analyzer and estimator | Sorin BIRIESCU</title><meta name=keywords content="Python,Data wrangling,Data analysis,Data visualisation,Pandas,Altair,Time series"><meta name=description content="Time series analysis on support calls"><meta name=author content><link rel=canonical href=https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/><meta name=google-site-verification content="XYZabc"><link crossorigin=anonymous href=/assets/css/stylesheet.min.61dfb3f0b4cda95d2ccb867f9a3b244ce5d23e12492bcc3c277df594c7bc1adf.css integrity="sha256-Yd+z8LTNqV0sy4Z/mjskTOXSPhJJK8w8J331lMe8Gt8=" rel="preload stylesheet" as=style><script defer crossorigin=anonymous src=/assets/js/highlight.min.27cd435cc9ed6abb4b496581b151804f79f366c412620272bb94e2f5f598ebcc.js integrity="sha256-J81DXMntartLSWWBsVGAT3nzZsQSYgJyu5Ti9fWY68w=" onload=hljs.initHighlightingOnLoad();></script><link rel=icon href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E><link rel=icon type=image/png sizes=16x16 href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E><link rel=icon type=image/png sizes=32x32 href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E><link rel=apple-touch-icon href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E><link rel=mask-icon href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><meta name=generator content="Hugo 0.80.0"><link rel=alternate hreflang=en href=https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><script type=application/javascript>var doNotTrack=false;if(!doNotTrack){(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');ga('create','UA-123-45','auto');ga('send','pageview');}</script><meta property="og:title" content="Call analyzer and estimator"><meta property="og:description" content="Time series analysis on support calls"><meta property="og:type" content="article"><meta property="og:url" content="https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/"><meta property="og:image" content="https://sorinbiriescu.github.io/projects/call_analyzer_estimator/cover_call_analyzer.png"><meta property="article:section" content="projects"><meta property="og:site_name" content="Sorin BIRIESCU"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://sorinbiriescu.github.io/projects/call_analyzer_estimator/cover_call_analyzer.png"><meta name=twitter:title content="Call analyzer and estimator"><meta name=twitter:description content="Time series analysis on support calls"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":4,"name":"Call analyzer and estimator","item":"https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Call analyzer and estimator","name":"Call analyzer and estimator","description":"Time series analysis on support calls","keywords":["Python","Data wrangling","Data analysis","Data visualisation","Pandas","Altair","Time series"],"articleBody":"This is based on one of my previous analyses for my clients. My client has an IT support department which receives telephone calls for support request. The team providing support is limited due to budget constraints and needs to do also onsite support as well as the aforementioned remote support.\nMy client wants to know how many persons should be available to pickup telephone calls in certain periods (hour interval, days of the week, month) in order to properly assign the technicians to either provide remote support or go onsite. Too many people picking up calls and there’s not enought work for everybody and onsite support will encounter delays. Not enough people to pickup telephone calls and the service quality will suffer (and possibly bring also penalties stipulated in the contract).\nThe questions that need answering are:\n What are the overall characteristics of the remote support telephone calls? How many technicians are required to pick up calls to fulfill the required service?  Due to confidentiality of data, the data related to the calls is not real, however I tried as much as possible to respect the distribution of calls during the day, week and periods of the year. In all other aspects, such as column data format, the imaginary data that I’m using for this analysis example is accurate.\nIn the real situation, the telephone calls data came in XML format exported by an Alcatel-Lucent ACD and imported by another Python script in a SQLite database. The database was used for an in-house build telephone console to visualize call activity in near real-time.\n ACD - An automated call distribution system, commonly known as automatic call distributor (ACD), is a telephony device that answers and distributes incoming calls to a specific group of terminals or agents within an organization.\n Data import and cleaning First thing first, the data needs to be imported from the SQLite database and loaded into a Pandas dataframe for analysis.\nimport sqlite3 from sqlite3 import Error import pandas as pd import numpy as np def create_connection(path): connection = None try: connection = sqlite3.connect(path) print(\"Connection to SQLite DB successful\") except Error as e: print(f\"The error '{e}' occurred\") return connection def execute_read_query(connection, query): cursor = connection.cursor() result = None try: cursor.execute(query) result = cursor.fetchall() return result except Error as e: print(f\"The error '{e}' occurred\") connection = create_connection(\"./call_journal.db\") Connection to SQLite DB successful\nData filtering sometimes starts with the SQL query. In my case, I’m only selecting data that I judged to be relevant to my analysis. However, it’s good to keep in mind that left out columns may contain relevant or crucial information. It’s best that in some cases the initial DB is reinvestigated to dig out more useful information.\nselect_call_records = ''' SELECT TicketType, ChargedUserID, SubscriberName, CommunicationType, Date, Time, DateTime, CallDuration, CallDurationMV, RingingDuration FROM call_journal''' db_cols = [\"TicketType\", \"ChargedUserID\", \"SubscriberName\", \"CommunicationType\", \"Date\", \"Time\", \"DateTime\", \"CallDuration\", \"CallDurationMV\", \"RingingDuration\"] call_records = execute_read_query(connection, select_call_records) df = pd.DataFrame(call_records, columns = db_cols) display(df.sample(5))     TicketType ChargedUserID SubscriberName CommunicationType Date Time DateTime CallDuration CallDurationMV RingingDuration     42299 Call 15 POSTE 6 IncomingTransfer 2020-05-18 14:25:00 2020-05-18 14:25:00 00:05:27 0:00:00 00:00:00   39961 Call 44 POSTE 8 Outgoing 2020-03-11 08:39:00 2020-03-11 08:39:00 00:00:05 0:00:00 00:00:00   45878 Call 33 MV 2 IncomingTransfer 2020-06-15 13:36:00 2020-06-15 13:36:00 0:00:00 00:00:04 00:00:00   36741 Call 19 ACD Incoming 2020-02-21 14:04:00 2020-02-21 14:04:00 0:00:00 00:00:10 00:00:00   9003 Call 4 POSTE 1 IncomingTransfer 2018-11-21 11:41:00 2018-11-21 11:41:00 0:03:16 0:00:00 0:00:06    df.info() RangeIndex: 63670 entries, 0 to 63669 Data columns (total 10 columns): # Column Non-Null Count Dtype --- ------ -------------- ----- 0 TicketType 63670 non-null object 1 ChargedUserID 63670 non-null object 2 SubscriberName 63588 non-null object 3 CommunicationType 63670 non-null object 4 Date 63670 non-null object 5 Time 63670 non-null object 6 DateTime 63670 non-null object 7 CallDuration 63670 non-null object 8 CallDurationMV 63670 non-null object 9 RingingDuration 63670 non-null object dtypes: object(10) memory usage: 4.9+ MB  The important thing after data import is to try to understand what data is presented in the columns. Not being aware of what’s the purpose of the data or how it was generated could give innacurate results. I’ll come with examples below.\nThe documentation of the source of information (in my case the ACD) was the first step in understanding how it generates the data. After going through (way too many) documentation pages, I found the following:\n calls are registered as tickets in the ACD (tickets are single units of information of certain operations, like calls, agent activity etc.) calls are received first by SubscriberName ACD, then transfered to SubscriberName agents (POSTE 1, POSTE 2, MV etc.) for call pickup or sent to voicemail. This is a very important piece of information as the ACD registers once the call when it reaches the system and another ticket when it’s transfered and answered by the agent. Basically, the total number of calls is actually HALF. Example below    SubscriberName CommunicationType DateTime DialledNumber     ACD Incoming 2019-11-28 10:38:00 0750.123.456   POSTE 1 IncomingTransfer 2019-11-28 10:38:00 0750.123.456      First, the call reaches ACD, then the same call gets transfered to agent (POSTE 1).\nCall -- received -- ACD -- transfered -- POSTE 1\nSince we are only interested in analyzing unique calls and not how they are routed, we need to drop all rows with SubscriberName == ACD to get the real numbers.\nThe missed calls are not marked specifically. The call routing logic is that it’s either answered by someone or it’s redirected to voicemail.    SubscriberName CommunicationType DateTime DialledNumber     ACD Incoming 2019-11-28 16:27:00 0750.123.456   MV 1 IncomingTransfer 2019-11-28 16:28:00 0750.123.456      The call reaches the ACD, no one can pickup the call, and the call is redirected to voicemail MV1.\nCall -- received -- ACD -- transfered -- POSTE 1\nAgain, same history as before, for the same call, 2 tickets are made. We’ll drop the lines with SubscriberName = ACD\ndf = df.loc[df[\"SubscriberName\"] != \"ACD\"] Now, we’ll continue looking into the other columns.\ndf[\"TicketType\"].unique() array(['Call'], dtype=object)\nSince “TicketType” doesn’t hold other values than “Call”, it has no value to us, so we’ll drop it.\ndf.drop(labels = [\"TicketType\"], axis = 1, inplace = True) df[\"ChargedUserID\"].unique() array(['13', '14', '10', '33', '32', '44', '11', '15', '12', '59', '30', '42', '01', '04', '03', '05', '02', '06', '07', '08', '43'], dtype=object)\ndf[\"SubscriberName\"].unique() array(['POSTE 4', 'POSTE 5', 'POSTE 1', 'MV 2', 'MV 1', 'POSTE 8', 'POSTE 2', 'POSTE 6', 'POSTE 3', 'POSTE 7'], dtype=object)\ndf[\"CommunicationType\"].unique() array(['IncomingTransfer', 'Outgoing', 'OutgoingTransfer', 'OutgoingTransferTransit', 'IncomingTransferTransit'], dtype=object)\nThis will be filtered as well, as we’re only interested in incoming calls. One curious this is the “IncomingTransferTransit” value. We’ll check it out:\ndf.loc[df[\"CommunicationType\"] == 'IncomingTransferTransit']     ChargedUserID SubscriberName CommunicationType Date Time DateTime CallDuration CallDurationMV RingingDuration     2329 14 POSTE 5 IncomingTransferTransit 2019-11-05 13:12:00 2019-11-05 13:12:00 00:00:09 0:00:00 00:00:00    Unfortunately, I could not find something relevand in the documentation and, since it’s only one value, we’ll drop it.\ndf = df.loc[df[\"CommunicationType\"] != 'IncomingTransferTransit'] One last thing to check is for calls on Saturday and Sunday. During an initial run of this report, the data contained calls received on saturday and sunday.\ndf[\"Date\"] = pd.to_datetime(df[\"Date\"], format = \"%Y-%m-%d\") df[\"Day_nb\"] = df[\"Date\"].dt.dayofweek df = df.loc[~df[\"Day_nb\"].isin([5,6])] df.drop(labels = \"Day_nb\", axis = 1, inplace = True) As a last check, we’ll look at the total values in columns, to check whether we need to dig deeper into the data.\ndf.info() Int64Index: 44890 entries, 0 to 63668 Data columns (total 9 columns): # Column Non-Null Count Dtype --- ------ -------------- ----- 0 ChargedUserID 44890 non-null object 1 SubscriberName 44890 non-null object 2 CommunicationType 44890 non-null object 3 Date 44890 non-null datetime64[ns] 4 Time 44890 non-null object 5 DateTime 44890 non-null object 6 CallDuration 44890 non-null object 7 CallDurationMV 44890 non-null object 8 RingingDuration 44890 non-null object dtypes: datetime64[ns](1), object(8) memory usage: 3.4+ MB  All looks OK so far, we’ll proceed to setting the columns data types\nColumn data format Next, we’ll set the proper type of certain columns\ndf[\"ChargedUserID\"] = df[\"ChargedUserID\"].astype(\"category\") df[\"SubscriberName\"] = df[\"SubscriberName\"].astype(\"category\") df[\"CommunicationType\"] = df[\"CommunicationType\"].astype(\"category\") df[\"Time\"] = pd.to_datetime(df[\"Date\"], format = \"%H:%M:%S\") df[\"DateTime\"] = pd.to_datetime(df[\"DateTime\"], format = \"%Y-%m-%d%H:%M:%S\") df[\"CallDuration\"] = pd.to_timedelta(df[\"CallDuration\"]) df[\"CallDurationMV\"] = pd.to_timedelta(df[\"CallDurationMV\"]) df[\"RingingDuration\"] = pd.to_timedelta(df[\"RingingDuration\"]) df.info() Int64Index: 44890 entries, 0 to 63668 Data columns (total 9 columns): # Column Non-Null Count Dtype --- ------ -------------- ----- 0 ChargedUserID 44890 non-null category 1 SubscriberName 44890 non-null category 2 CommunicationType 44890 non-null category 3 Date 44890 non-null datetime64[ns] 4 Time 44890 non-null datetime64[ns] 5 DateTime 44890 non-null datetime64[ns] 6 CallDuration 44890 non-null timedelta64[ns] 7 CallDurationMV 44890 non-null timedelta64[ns] 8 RingingDuration 44890 non-null timedelta64[ns] dtypes: category(3), datetime64[ns](3), timedelta64[ns](3) memory usage: 2.5 MB  Data Analysis We’ll start with some basic data exploration, to see some trends. Since we’re only interested in incoming calls, we’ll create a mask and filter the data\nimport altair as alt mask_incoming = (df[\"CommunicationType\"] == \"IncomingTransfer\") df = df.loc[mask_incoming] df[\"Answered\"] = 0 df.loc[df[\"SubscriberName\"].str.startswith('POSTE'), \"Answered\"] = 1 df.sample(5)     ChargedUserID SubscriberName CommunicationType Date Time DateTime CallDuration CallDurationMV RingingDuration Answered     59243 33 MV 2 IncomingTransfer 2020-09-08 2020-09-08 2020-09-08 09:00:00 0 days 00:00:00 0 days 00:00:28 0 days 00:00:00 0   14136 5 POSTE 6 IncomingTransfer 2019-03-06 2019-03-06 2019-03-06 10:37:00 0 days 00:03:44 0 days 00:00:00 0 days 00:00:06 1   45790 33 MV 2 IncomingTransfer 2020-06-15 2020-06-15 2020-06-15 11:18:00 0 days 00:00:00 0 days 00:00:03 0 days 00:00:00 0   57021 32 MV 1 IncomingTransfer 2020-08-26 2020-08-26 2020-08-26 08:45:00 0 days 00:00:00 0 days 00:00:05 0 days 00:00:00 0   830 13 POSTE 4 IncomingTransfer 2019-07-25 2019-07-25 2019-07-25 08:49:00 0 days 00:03:47 0 days 00:00:00 0 days 00:00:00 1    Total calls per day total_per_day = df.groupby(\"Date\")[\"CommunicationType\"].count().reset_index().rename({\"CommunicationType\": \"Total\"}, axis = 1) total_per_day.sample(5)     Date Total     130 2019-04-18 47   409 2020-08-05 53   195 2019-07-26 66   329 2020-02-18 139   337 2020-02-28 53    alt.Chart(total_per_day).mark_trail().encode( x = \"Date:T\", y = 'Total', size = 'Total:Q' ).properties( width = 600 ) We can see that there is a huge chunk of data missing in April and May. The missing data is due to the 2020 COVID confinement.\nAlso, the chart is overcrowded, nothing is really visible here. Let’s remake it into a boxplot chart, to have more details.\nboxplot = df.groupby(\"Date\")[\"CommunicationType\"].count().reset_index().rename({\"CommunicationType\": \"Total\"}, axis = 1) boxplot[\"Date\"] = pd.to_datetime(boxplot[\"Date\"], format = \"%H:%M:%S\") boxplot[\"YearMonth\"] = boxplot['Date'].dt.to_period('M').dt.strftime('%Y-%m') boxplot.sample(5)     Date Total YearMonth     122 2019-04-08 75 2019-04   216 2019-08-28 68 2019-08   260 2019-10-29 135 2019-10   82 2019-02-11 85 2019-02   29 2018-11-23 47 2018-11    alt.Chart(boxplot).mark_boxplot().encode( x='YearMonth:O', y='Total:Q' ).properties( width=600 ) We can extract some info now:\n the average held between 60 to 100 in 2019, however the average ammount of calls increased in 2020. there is considerable variation in min / max calls from month to month (probably due to season variations) and this will require more precise estimates on manpower. there are outliers for max values, most likely indicating general incidents in the infrastructure that generate peak calls to the service. This should be adressed by an emergency service redirection.  Total calls per month - volume total_per_month = df.groupby(\"Date\")[\"CommunicationType\"].count().reset_index().rename({\"CommunicationType\": \"Total\"}, axis = 1) total_per_month.sample(5)     Date Total     130 2019-04-18 47   86 2019-02-15 49   262 2019-10-31 131   286 2019-12-17 68   302 2020-01-10 3    alt.Chart(total_per_month).mark_bar().encode( x = \"yearmonth(Date):O\", y = 'Total', size = 'Total:Q' ).properties( width = 600 ) total_heatmap = df.groupby(\"Date\")[\"CommunicationType\"].count().reset_index().rename({\"CommunicationType\": \"Total\"}, axis = 1) heatmap_per_day = alt.Chart(total_heatmap).mark_rect().encode( x='date(Date):O', y='yearmonth(Date):O', color= alt.Color('Total:Q', scale=alt.Scale(scheme='goldred')) ).properties( width=600 ) heatmap_per_day heatmap_per_day_of_week = alt.Chart(total_heatmap.rename({\"CommunicationType\": \"Total\"}, axis = 1)).mark_rect().encode( x='day(Date):O', y='yearmonth(Date):O', color= alt.Color('Total:Q', scale=alt.Scale(scheme='goldred')) ).properties( width=600 ) heatmap_per_day_of_week Estimator Given a level of service, what is the minimum required ammount of agents to fulfill the service in question?\nWe’ll check this by constructing time intervals from calls start and end time and we’ll check at a certain frequency how many time intervals overlap. Since only one person can respond to a call, the total number of overlaps is the number of required agents.\nLet’s look at a simple example:\nIn the interval 8h00 - 8h30, we received 2 calls that were answered and we missed one call. In order to properly estimate the time occupation, we’ll add 5min (the average conversation time) to missed calls. So, for this interval, we needed 3 agents to answer. In the next interval, 8h30 - 9h00, we still have 2 agents on call (Call1 and Call2), we assume that there is another fictive agent on missed Call3 and we receive another call that we missed. In total, for this interval, we would need 4 agents. In total, we can see that we need:\n   Interval Agents needed     8h00 - 8h30 3   8h30 - 9h00 4   9h00 - 9h30 2    The time interval to check for call status will be smaller (5 min) in order to be more precise in our results.\ndf[\"call_start_dt\"] = df[\"DateTime\"] df[\"call_end_dt\"] = np.nan df.loc[df[\"Answered\"] == 1, \"call_end_dt\"] = df[\"DateTime\"] + df[\"CallDuration\"] average_call_time = df.loc[df[\"Answered\"] == 1,\"CallDuration\"].mean() average_call_time = average_call_time.floor(\"s\") average_call_time Timedelta('0 days 00:05:11')  df.loc[df[\"Answered\"] == 0, \"call_end_dt\"] = df[\"DateTime\"] + pd.to_timedelta(average_call_time, unit = \"S\") df.loc[:,(\"DateTime\", \"CallDuration\", \"call_start_dt\", \"call_end_dt\")].sample(5) .dataframe tbody tr th { vertical-align: top; } .dataframe thead th { text-align: right; }  def create_interval(df): df[\"Time_interval\"] = pd.Interval(df[\"call_start_dt\"], df[\"call_end_dt\"]) return df df[\"Time_interval\"] = np.nan df = df.apply(create_interval, axis = 1) df.loc[:(\"call_start_dt\", \"call_end_dt\", \"Time_interval\")].head()     call_start_dt call_end_dt Time_interval     0 2019-12-20 14:03:00 2019-12-20 14:12:43 (2019-12-20 14:03:00, 2019-12-20 14:12:43]   3 2019-12-20 14:27:00 2019-12-20 14:29:14 (2019-12-20 14:27:00, 2019-12-20 14:29:14]   4 2019-12-20 14:28:00 2019-12-20 14:30:07 (2019-12-20 14:28:00, 2019-12-20 14:30:07]   6 2019-12-20 14:35:00 2019-12-20 14:36:10 (2019-12-20 14:35:00, 2019-12-20 14:36:10]   10 2019-12-20 14:40:00 2019-12-20 14:41:45 (2019-12-20 14:40:00, 2019-12-20 14:41:45]    Constructing time intervals between date A and date B, each day with opening hour X and closing hour Y is … tricky :(\nunique_date_list = df[\"Date\"].unique() date_range_start = [] date_range_end = [] frequency = pd.Timedelta(\"5 minutes\") for unique_date in unique_date_list: day_range_start = pd.date_range(start = unique_date + pd.Timedelta(\"7 hours 30 minutes\"), end = unique_date + pd.Timedelta(\"18 hours 30 minutes\") - frequency, freq = frequency ) day_range_end = pd.date_range(start = unique_date + pd.Timedelta(\"7 hours 30 minutes\") + frequency, end = unique_date + pd.Timedelta(\"18 hours 30 minutes\"), freq = frequency ) date_range_start += day_range_start date_range_end += day_range_end verification_range = pd.IntervalIndex.from_arrays(date_range_start, date_range_end) verification_range IntervalIndex([(2019-12-20 07:30:00, 2019-12-20 07:35:00], (2019-12-20 07:35:00, 2019-12-20 07:40:00], (2019-12-20 07:40:00, 2019-12-20 07:45:00], (2019-12-20 07:45:00, 2019-12-20 07:50:00], (2019-12-20 07:50:00, 2019-12-20 07:55:00] ... (2020-10-01 18:05:00, 2020-10-01 18:10:00], (2020-10-01 18:10:00, 2020-10-01 18:15:00], (2020-10-01 18:15:00, 2020-10-01 18:20:00], (2020-10-01 18:20:00, 2020-10-01 18:25:00], (2020-10-01 18:25:00, 2020-10-01 18:30:00]], closed='right', dtype='interval[datetime64[ns]]')  result = [] for verification_interval in verification_range: counter = 0 # we're filtering the main dataframe as there is no point in searching for overlaps in the next day mask_filter_left = (df[\"call_start_dt\"]  verification_interval.left - pd.Timedelta(\"24h\")) mask_filter_right = (df[\"call_end_dt\"]  verification_interval.right + pd.Timedelta(\"24h\")) call_intervals = df.loc[(mask_filter_left \u0026 mask_filter_right), \"Time_interval\"] for call_interval in call_intervals: if verification_interval.overlaps(call_interval): counter += 1 result.append({\"time_interval\": verification_interval, \"total_overlaps\": counter}) estimator = pd.DataFrame(result) estimator.sample(5)     time_interval total_overlaps     13575 (2019-01-09 16:45:00, 2019-01-09 16:50:00] 2   58858 (2020-09-24 17:20:00, 2020-09-24 17:25:00] 1   28128 (2019-06-21 08:30:00, 2019-06-21 08:35:00] 1   52824 (2020-07-23 09:30:00, 2020-07-23 09:35:00] 1   24577 (2019-05-10 09:35:00, 2019-05-10 09:40:00] 3    We got our results, but we’ll only keep the starting date of the interval, it’s much easier to construct graphs with simple dates than time intervals.\nestimator[\"DateTime\"] = estimator[\"time_interval\"].apply(lambda x: x.left) estimator = estimator.loc[:,(\"total_overlaps\",\"DateTime\")].rename({\"total_overlaps\": \"Total\"}, axis = 1) estimator.sample(5)     Total DateTime     34381 1 2019-09-04 12:35:00   46296 2 2020-05-11 15:30:00   33707 2 2019-08-28 11:25:00   38821 3 2019-10-22 08:35:00   38847 1 2019-10-22 10:45:00    Average / Min / Max nb of agents required per hour per day estimator[\"Hour\"] = estimator[\"DateTime\"].dt.hour estimator[\"Day_nb\"] = estimator[\"DateTime\"].dt.day estimator.sample(5)     Total DateTime Hour Day_nb     16620 0 2019-02-11 17:30:00 17 11   35779 0 2019-09-19 08:05:00 8 19   41340 6 2020-01-27 09:30:00 9 27   14365 1 2019-01-17 16:35:00 16 17   18406 1 2019-03-01 12:20:00 12 1    def calc_agg(df): df[\"Total_mean\"] = df[\"Total\"].mean() df[\"Total_mean\"] = np.ceil(df[\"Total_mean\"]) df[\"Total_min\"] = df[\"Total\"].min() df[\"Total_max\"] = df[\"Total\"].max() return df heatmap_table = estimator.groupby([\"Day_nb\", \"Hour\"]).apply(calc_agg).reset_index(drop = True) heatmap_table     Total DateTime Hour Day_nb Total_mean Total_min Total_max     639 0 2019-12-27 16:45:00 16 27 2.0 0 5   33497 1 2019-08-26 15:55:00 15 26 2.0 0 10   46958 0 2020-05-18 15:40:00 15 18 2.0 0 6   43107 1 2020-02-13 13:45:00 13 13 1.0 0 7   56781 3 2020-09-03 09:15:00 9 3 3.0 0 9    alt.data_transformers.disable_max_rows() base = alt.Chart(heatmap_table).encode( x='Hour:O', y='Day_nb:O' ) color_avg = base.mark_rect().encode( color= alt.Color('Total_mean:Q', scale=alt.Scale(scheme='goldred')) ) text_avg = base.mark_text(baseline='middle').encode( text = 'max(Total_mean):Q' ) heatmap = color_avg + text_avg heatmap ","wordCount":"2653","inLanguage":"en","image":"https://sorinbiriescu.github.io/projects/call_analyzer_estimator/cover_call_analyzer.png","datePublished":"0001-01-01T00:00:00Z","dateModified":"0001-01-01T00:00:00Z","mainEntityOfPage":{"@type":"WebPage","@id":"https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/"},"publisher":{"@type":"Organization","name":"Sorin BIRIESCU","logo":{"@type":"ImageObject","url":"https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E"}}}</script></head><body id=top><script>if(localStorage.getItem("pref-theme")==="dark"){document.body.classList.add('dark');}</script><header class=header><nav class=nav><div class=logo><a href=https://sorinbiriescu.github.io/en/ accesskey=h title="Sorin BIRIESCU (Alt + H)">Sorin BIRIESCU</a>
-<span class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button><ul class=lang-switch><li>|</li><li><a href=https://sorinbiriescu.github.io/fr/ title="🇫🇷 En Français" aria-label=":fr: En Français">🇫🇷 En Français</a></li></ul></span></div><ul id=menu><li><a href=https://sorinbiriescu.github.io/en/cv/cv title=CV><span>CV</span></a></li><li><a href=https://sorinbiriescu.github.io/en/projects/ title=Projects><span>Projects</span></a></li><li><a href=https://sorinbiriescu.github.io/en/skills title="Skill List"><span>Skill List</span></a></li><li><a href=https://sorinbiriescu.github.io/en/tags/ title="Skill Tags"><span>Skill Tags</span></a></li><li><a href=https://sorinbiriescu.github.io/en/contact_en title=Contact><span>Contact</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><h1 class=post-title>Call analyzer and estimator</h1><div class=post-description>Time series analysis on support calls</div><div class=post-meta>13 min</div></header><figure class=entry-cover><img loading=lazy src=https://sorinbiriescu.github.io/projects/call_analyzer_estimator/cover_call_analyzer.png alt><p></p></figure><div class=toc><details><summary accesskey=c title="(Alt + C)"><span class=details>Table of Contents</span></summary><div class=inner><ul><li><a href=#data-import-and-cleaning aria-label="Data import and cleaning">Data import and cleaning</a><ul><li><a href=#column-data-format aria-label="Column data format">Column data format</a></li></ul></li><li><a href=#data-analysis aria-label="Data Analysis">Data Analysis</a><ul><li><a href=#total-calls-per-day aria-label="Total calls per day">Total calls per day</a></li><li><a href=#total-calls-per-month---volume aria-label="Total calls per month - volume">Total calls per month - volume</a></li></ul></li><li><a href=#estimator aria-label=Estimator>Estimator</a></li><li><a href=#average--min--max-nb-of-agents-required-per-hour-per-day aria-label="Average / Min / Max nb of agents required per hour per day">Average / Min / Max nb of agents required per hour per day</a></li></ul></div></details></div><div class=post-content><p>This is based on one of my previous analyses for my clients. My client has an IT support department which receives telephone calls for support request. The team providing support is limited due to budget constraints and needs to do also onsite support as well as the aforementioned remote support.</p><p><img loading=lazy src=/projects/call_analyzer_estimator/team_diagram.png alt="Team diagram"></p><p>My client wants to know how many persons should be available to pickup telephone calls in certain periods (hour interval, days of the week, month) in order to properly assign the technicians to either provide remote support or go onsite. Too many people picking up calls and there&rsquo;s not enought work for everybody and onsite support will encounter delays. Not enough people to pickup telephone calls and the service quality will suffer (and possibly bring also penalties stipulated in the contract).</p><p>The questions that need answering are:</p><ol><li>What are the overall characteristics of the remote support telephone calls?</li><li>How many technicians are required to pick up calls to fulfill the required service?</li></ol><p>Due to confidentiality of data, the data related to the calls is not real, however I tried as much as possible to respect the distribution of calls during the day, week and periods of the year. In all other aspects, such as column data format, the imaginary data that I&rsquo;m using for this analysis example is accurate.</p><p>In the real situation, the telephone calls data came in XML format exported by an Alcatel-Lucent ACD and imported by another Python script in a SQLite database. The database was used for an in-house build telephone console to visualize call activity in near real-time.</p><blockquote><p>ACD - An automated call distribution system, commonly known as automatic call distributor (ACD), is a telephony device that answers and distributes incoming calls to a specific group of terminals or agents within an organization.</p></blockquote><h1 id=data-import-and-cleaning>Data import and cleaning<a hidden class=anchor aria-hidden=true href=#data-import-and-cleaning>#</a></h1><p>First thing first, the data needs to be imported from the SQLite database and loaded into a Pandas dataframe for analysis.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#f92672>import</span> sqlite3
+<!doctype html><html lang=en dir=auto>
+<head><meta charset=utf-8>
+<meta http-equiv=x-ua-compatible content="IE=edge">
+<meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no">
+<meta name=robots content="index, follow">
+<title>Call analyzer and estimator | Sorin BIRIESCU</title>
+<meta name=keywords content="Python,Data wrangling,Data analysis,Data visualisation,Pandas,Altair,Time series">
+<meta name=description content="Time series analysis on support calls">
+<meta name=author content>
+<link rel=canonical href=https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/>
+<meta name=google-site-verification content="XYZabc">
+<link crossorigin=anonymous href=/assets/css/stylesheet.min.6f60056d44d3f7eb69a4bc6c332b59960f3a995802bded244750232f33713c49.css integrity="sha256-b2AFbUTT9+tppLxsMytZlg86mVgCve0kR1AjLzNxPEk=" rel="preload stylesheet" as=style>
+<script defer crossorigin=anonymous src=/assets/js/highlight.min.7680afc38aa6b15ddf158a4f3780b7b1f7dde7e91d26f073e6229bb7a0793c92.js integrity="sha256-doCvw4qmsV3fFYpPN4C3sffd5+kdJvBz5iKbt6B5PJI=" onload=hljs.initHighlightingOnLoad()></script>
+<link rel=icon href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E>
+<link rel=icon type=image/png sizes=16x16 href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E>
+<link rel=icon type=image/png sizes=32x32 href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E>
+<link rel=apple-touch-icon href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E>
+<link rel=mask-icon href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E>
+<meta name=theme-color content="#2e2e33">
+<meta name=msapplication-TileColor content="#2e2e33">
+<meta name=generator content="Hugo 0.88.1">
+<link rel=alternate hreflang=en href=https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/>
+<noscript>
+<style>#theme-toggle,.top-link{display:none}</style>
+</noscript>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-T0XSNPZVZF"></script>
+<script>var doNotTrack=!1;if(!doNotTrack){window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date),gtag('config','G-T0XSNPZVZF',{anonymize_ip:!1})}</script>
+<meta property="og:title" content="Call analyzer and estimator">
+<meta property="og:description" content="Time series analysis on support calls">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/">
+<meta property="og:image" content="https://sorinbiriescu.github.io/projects/call_analyzer_estimator/cover_call_analyzer.png"><meta property="article:section" content="projects">
+<meta property="og:site_name" content="Sorin BIRIESCU">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://sorinbiriescu.github.io/projects/call_analyzer_estimator/cover_call_analyzer.png">
+<meta name=twitter:title content="Call analyzer and estimator">
+<meta name=twitter:description content="Time series analysis on support calls">
+<script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":4,"name":"Call analyzer and estimator","item":"https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/"}]}</script>
+<script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Call analyzer and estimator","name":"Call analyzer and estimator","description":"Time series analysis on support calls","keywords":["Python","Data wrangling","Data analysis","Data visualisation","Pandas","Altair","Time series"],"articleBody":"This is based on one of my previous analyses for my clients. My client has an IT support department which receives telephone calls for support request. The team providing support is limited due to budget constraints and needs to do also onsite support as well as the aforementioned remote support.\nMy client wants to know how many persons should be available to pickup telephone calls in certain periods (hour interval, days of the week, month) in order to properly assign the technicians to either provide remote support or go onsite. Too many people picking up calls and there’s not enought work for everybody and onsite support will encounter delays. Not enough people to pickup telephone calls and the service quality will suffer (and possibly bring also penalties stipulated in the contract).\nThe questions that need answering are:\n What are the overall characteristics of the remote support telephone calls? How many technicians are required to pick up calls to fulfill the required service?  Due to confidentiality of data, the data related to the calls is not real, however I tried as much as possible to respect the distribution of calls during the day, week and periods of the year. In all other aspects, such as column data format, the imaginary data that I’m using for this analysis example is accurate.\nIn the real situation, the telephone calls data came in XML format exported by an Alcatel-Lucent ACD and imported by another Python script in a SQLite database. The database was used for an in-house build telephone console to visualize call activity in near real-time.\n ACD - An automated call distribution system, commonly known as automatic call distributor (ACD), is a telephony device that answers and distributes incoming calls to a specific group of terminals or agents within an organization.\n Data import and cleaning First thing first, the data needs to be imported from the SQLite database and loaded into a Pandas dataframe for analysis.\nimport sqlite3 from sqlite3 import Error import pandas as pd import numpy as np def create_connection(path): connection = None try: connection = sqlite3.connect(path) print(\"Connection to SQLite DB successful\") except Error as e: print(f\"The error '{e}' occurred\") return connection def execute_read_query(connection, query): cursor = connection.cursor() result = None try: cursor.execute(query) result = cursor.fetchall() return result except Error as e: print(f\"The error '{e}' occurred\") connection = create_connection(\"./call_journal.db\") Connection to SQLite DB successful\nData filtering sometimes starts with the SQL query. In my case, I’m only selecting data that I judged to be relevant to my analysis. However, it’s good to keep in mind that left out columns may contain relevant or crucial information. It’s best that in some cases the initial DB is reinvestigated to dig out more useful information.\nselect_call_records = ''' SELECT TicketType, ChargedUserID, SubscriberName, CommunicationType, Date, Time, DateTime, CallDuration, CallDurationMV, RingingDuration FROM call_journal''' db_cols = [\"TicketType\", \"ChargedUserID\", \"SubscriberName\", \"CommunicationType\", \"Date\", \"Time\", \"DateTime\", \"CallDuration\", \"CallDurationMV\", \"RingingDuration\"] call_records = execute_read_query(connection, select_call_records) df = pd.DataFrame(call_records, columns = db_cols) display(df.sample(5))     TicketType ChargedUserID SubscriberName CommunicationType Date Time DateTime CallDuration CallDurationMV RingingDuration     42299 Call 15 POSTE 6 IncomingTransfer 2020-05-18 14:25:00 2020-05-18 14:25:00 00:05:27 0:00:00 00:00:00   39961 Call 44 POSTE 8 Outgoing 2020-03-11 08:39:00 2020-03-11 08:39:00 00:00:05 0:00:00 00:00:00   45878 Call 33 MV 2 IncomingTransfer 2020-06-15 13:36:00 2020-06-15 13:36:00 0:00:00 00:00:04 00:00:00   36741 Call 19 ACD Incoming 2020-02-21 14:04:00 2020-02-21 14:04:00 0:00:00 00:00:10 00:00:00   9003 Call 4 POSTE 1 IncomingTransfer 2018-11-21 11:41:00 2018-11-21 11:41:00 0:03:16 0:00:00 0:00:06    df.info() RangeIndex: 63670 entries, 0 to 63669 Data columns (total 10 columns): # Column Non-Null Count Dtype --- ------ -------------- ----- 0 TicketType 63670 non-null object 1 ChargedUserID 63670 non-null object 2 SubscriberName 63588 non-null object 3 CommunicationType 63670 non-null object 4 Date 63670 non-null object 5 Time 63670 non-null object 6 DateTime 63670 non-null object 7 CallDuration 63670 non-null object 8 CallDurationMV 63670 non-null object 9 RingingDuration 63670 non-null object dtypes: object(10) memory usage: 4.9+ MB  The important thing after data import is to try to understand what data is presented in the columns. Not being aware of what’s the purpose of the data or how it was generated could give innacurate results. I’ll come with examples below.\nThe documentation of the source of information (in my case the ACD) was the first step in understanding how it generates the data. After going through (way too many) documentation pages, I found the following:\n calls are registered as tickets in the ACD (tickets are single units of information of certain operations, like calls, agent activity etc.) calls are received first by SubscriberName ACD, then transfered to SubscriberName agents (POSTE 1, POSTE 2, MV etc.) for call pickup or sent to voicemail. This is a very important piece of information as the ACD registers once the call when it reaches the system and another ticket when it’s transfered and answered by the agent. Basically, the total number of calls is actually HALF. Example below    SubscriberName CommunicationType DateTime DialledNumber     ACD Incoming 2019-11-28 10:38:00 0750.123.456   POSTE 1 IncomingTransfer 2019-11-28 10:38:00 0750.123.456      First, the call reaches ACD, then the same call gets transfered to agent (POSTE 1).\nCall -- received -- ACD -- transfered -- POSTE 1\nSince we are only interested in analyzing unique calls and not how they are routed, we need to drop all rows with SubscriberName == ACD to get the real numbers.\nThe missed calls are not marked specifically. The call routing logic is that it’s either answered by someone or it’s redirected to voicemail.    SubscriberName CommunicationType DateTime DialledNumber     ACD Incoming 2019-11-28 16:27:00 0750.123.456   MV 1 IncomingTransfer 2019-11-28 16:28:00 0750.123.456      The call reaches the ACD, no one can pickup the call, and the call is redirected to voicemail MV1.\nCall -- received -- ACD -- transfered -- POSTE 1\nAgain, same history as before, for the same call, 2 tickets are made. We’ll drop the lines with SubscriberName = ACD\ndf = df.loc[df[\"SubscriberName\"] != \"ACD\"] Now, we’ll continue looking into the other columns.\ndf[\"TicketType\"].unique() array(['Call'], dtype=object)\nSince “TicketType” doesn’t hold other values than “Call”, it has no value to us, so we’ll drop it.\ndf.drop(labels = [\"TicketType\"], axis = 1, inplace = True) df[\"ChargedUserID\"].unique() array(['13', '14', '10', '33', '32', '44', '11', '15', '12', '59', '30', '42', '01', '04', '03', '05', '02', '06', '07', '08', '43'], dtype=object)\ndf[\"SubscriberName\"].unique() array(['POSTE 4', 'POSTE 5', 'POSTE 1', 'MV 2', 'MV 1', 'POSTE 8', 'POSTE 2', 'POSTE 6', 'POSTE 3', 'POSTE 7'], dtype=object)\ndf[\"CommunicationType\"].unique() array(['IncomingTransfer', 'Outgoing', 'OutgoingTransfer', 'OutgoingTransferTransit', 'IncomingTransferTransit'], dtype=object)\nThis will be filtered as well, as we’re only interested in incoming calls. One curious this is the “IncomingTransferTransit” value. We’ll check it out:\ndf.loc[df[\"CommunicationType\"] == 'IncomingTransferTransit']     ChargedUserID SubscriberName CommunicationType Date Time DateTime CallDuration CallDurationMV RingingDuration     2329 14 POSTE 5 IncomingTransferTransit 2019-11-05 13:12:00 2019-11-05 13:12:00 00:00:09 0:00:00 00:00:00    Unfortunately, I could not find something relevand in the documentation and, since it’s only one value, we’ll drop it.\ndf = df.loc[df[\"CommunicationType\"] != 'IncomingTransferTransit'] One last thing to check is for calls on Saturday and Sunday. During an initial run of this report, the data contained calls received on saturday and sunday.\ndf[\"Date\"] = pd.to_datetime(df[\"Date\"], format = \"%Y-%m-%d\") df[\"Day_nb\"] = df[\"Date\"].dt.dayofweek df = df.loc[~df[\"Day_nb\"].isin([5,6])] df.drop(labels = \"Day_nb\", axis = 1, inplace = True) As a last check, we’ll look at the total values in columns, to check whether we need to dig deeper into the data.\ndf.info() Int64Index: 44890 entries, 0 to 63668 Data columns (total 9 columns): # Column Non-Null Count Dtype --- ------ -------------- ----- 0 ChargedUserID 44890 non-null object 1 SubscriberName 44890 non-null object 2 CommunicationType 44890 non-null object 3 Date 44890 non-null datetime64[ns] 4 Time 44890 non-null object 5 DateTime 44890 non-null object 6 CallDuration 44890 non-null object 7 CallDurationMV 44890 non-null object 8 RingingDuration 44890 non-null object dtypes: datetime64[ns](1), object(8) memory usage: 3.4+ MB  All looks OK so far, we’ll proceed to setting the columns data types\nColumn data format Next, we’ll set the proper type of certain columns\ndf[\"ChargedUserID\"] = df[\"ChargedUserID\"].astype(\"category\") df[\"SubscriberName\"] = df[\"SubscriberName\"].astype(\"category\") df[\"CommunicationType\"] = df[\"CommunicationType\"].astype(\"category\") df[\"Time\"] = pd.to_datetime(df[\"Date\"], format = \"%H:%M:%S\") df[\"DateTime\"] = pd.to_datetime(df[\"DateTime\"], format = \"%Y-%m-%d%H:%M:%S\") df[\"CallDuration\"] = pd.to_timedelta(df[\"CallDuration\"]) df[\"CallDurationMV\"] = pd.to_timedelta(df[\"CallDurationMV\"]) df[\"RingingDuration\"] = pd.to_timedelta(df[\"RingingDuration\"]) df.info() Int64Index: 44890 entries, 0 to 63668 Data columns (total 9 columns): # Column Non-Null Count Dtype --- ------ -------------- ----- 0 ChargedUserID 44890 non-null category 1 SubscriberName 44890 non-null category 2 CommunicationType 44890 non-null category 3 Date 44890 non-null datetime64[ns] 4 Time 44890 non-null datetime64[ns] 5 DateTime 44890 non-null datetime64[ns] 6 CallDuration 44890 non-null timedelta64[ns] 7 CallDurationMV 44890 non-null timedelta64[ns] 8 RingingDuration 44890 non-null timedelta64[ns] dtypes: category(3), datetime64[ns](3), timedelta64[ns](3) memory usage: 2.5 MB  Data Analysis We’ll start with some basic data exploration, to see some trends. Since we’re only interested in incoming calls, we’ll create a mask and filter the data\nimport altair as alt mask_incoming = (df[\"CommunicationType\"] == \"IncomingTransfer\") df = df.loc[mask_incoming] df[\"Answered\"] = 0 df.loc[df[\"SubscriberName\"].str.startswith('POSTE'), \"Answered\"] = 1 df.sample(5)     ChargedUserID SubscriberName CommunicationType Date Time DateTime CallDuration CallDurationMV RingingDuration Answered     59243 33 MV 2 IncomingTransfer 2020-09-08 2020-09-08 2020-09-08 09:00:00 0 days 00:00:00 0 days 00:00:28 0 days 00:00:00 0   14136 5 POSTE 6 IncomingTransfer 2019-03-06 2019-03-06 2019-03-06 10:37:00 0 days 00:03:44 0 days 00:00:00 0 days 00:00:06 1   45790 33 MV 2 IncomingTransfer 2020-06-15 2020-06-15 2020-06-15 11:18:00 0 days 00:00:00 0 days 00:00:03 0 days 00:00:00 0   57021 32 MV 1 IncomingTransfer 2020-08-26 2020-08-26 2020-08-26 08:45:00 0 days 00:00:00 0 days 00:00:05 0 days 00:00:00 0   830 13 POSTE 4 IncomingTransfer 2019-07-25 2019-07-25 2019-07-25 08:49:00 0 days 00:03:47 0 days 00:00:00 0 days 00:00:00 1    Total calls per day total_per_day = df.groupby(\"Date\")[\"CommunicationType\"].count().reset_index().rename({\"CommunicationType\": \"Total\"}, axis = 1) total_per_day.sample(5)     Date Total     130 2019-04-18 47   409 2020-08-05 53   195 2019-07-26 66   329 2020-02-18 139   337 2020-02-28 53    alt.Chart(total_per_day).mark_trail().encode( x = \"Date:T\", y = 'Total', size = 'Total:Q' ).properties( width = 600 ) We can see that there is a huge chunk of data missing in April and May. The missing data is due to the 2020 COVID confinement.\nAlso, the chart is overcrowded, nothing is really visible here. Let’s remake it into a boxplot chart, to have more details.\nboxplot = df.groupby(\"Date\")[\"CommunicationType\"].count().reset_index().rename({\"CommunicationType\": \"Total\"}, axis = 1) boxplot[\"Date\"] = pd.to_datetime(boxplot[\"Date\"], format = \"%H:%M:%S\") boxplot[\"YearMonth\"] = boxplot['Date'].dt.to_period('M').dt.strftime('%Y-%m') boxplot.sample(5)     Date Total YearMonth     122 2019-04-08 75 2019-04   216 2019-08-28 68 2019-08   260 2019-10-29 135 2019-10   82 2019-02-11 85 2019-02   29 2018-11-23 47 2018-11    alt.Chart(boxplot).mark_boxplot().encode( x='YearMonth:O', y='Total:Q' ).properties( width=600 ) We can extract some info now:\n the average held between 60 to 100 in 2019, however the average ammount of calls increased in 2020. there is considerable variation in min / max calls from month to month (probably due to season variations) and this will require more precise estimates on manpower. there are outliers for max values, most likely indicating general incidents in the infrastructure that generate peak calls to the service. This should be adressed by an emergency service redirection.  Total calls per month - volume total_per_month = df.groupby(\"Date\")[\"CommunicationType\"].count().reset_index().rename({\"CommunicationType\": \"Total\"}, axis = 1) total_per_month.sample(5)     Date Total     130 2019-04-18 47   86 2019-02-15 49   262 2019-10-31 131   286 2019-12-17 68   302 2020-01-10 3    alt.Chart(total_per_month).mark_bar().encode( x = \"yearmonth(Date):O\", y = 'Total', size = 'Total:Q' ).properties( width = 600 ) total_heatmap = df.groupby(\"Date\")[\"CommunicationType\"].count().reset_index().rename({\"CommunicationType\": \"Total\"}, axis = 1) heatmap_per_day = alt.Chart(total_heatmap).mark_rect().encode( x='date(Date):O', y='yearmonth(Date):O', color= alt.Color('Total:Q', scale=alt.Scale(scheme='goldred')) ).properties( width=600 ) heatmap_per_day heatmap_per_day_of_week = alt.Chart(total_heatmap.rename({\"CommunicationType\": \"Total\"}, axis = 1)).mark_rect().encode( x='day(Date):O', y='yearmonth(Date):O', color= alt.Color('Total:Q', scale=alt.Scale(scheme='goldred')) ).properties( width=600 ) heatmap_per_day_of_week Estimator Given a level of service, what is the minimum required ammount of agents to fulfill the service in question?\nWe’ll check this by constructing time intervals from calls start and end time and we’ll check at a certain frequency how many time intervals overlap. Since only one person can respond to a call, the total number of overlaps is the number of required agents.\nLet’s look at a simple example:\nIn the interval 8h00 - 8h30, we received 2 calls that were answered and we missed one call. In order to properly estimate the time occupation, we’ll add 5min (the average conversation time) to missed calls. So, for this interval, we needed 3 agents to answer. In the next interval, 8h30 - 9h00, we still have 2 agents on call (Call1 and Call2), we assume that there is another fictive agent on missed Call3 and we receive another call that we missed. In total, for this interval, we would need 4 agents. In total, we can see that we need:\n   Interval Agents needed     8h00 - 8h30 3   8h30 - 9h00 4   9h00 - 9h30 2    The time interval to check for call status will be smaller (5 min) in order to be more precise in our results.\ndf[\"call_start_dt\"] = df[\"DateTime\"] df[\"call_end_dt\"] = np.nan df.loc[df[\"Answered\"] == 1, \"call_end_dt\"] = df[\"DateTime\"] + df[\"CallDuration\"] average_call_time = df.loc[df[\"Answered\"] == 1,\"CallDuration\"].mean() average_call_time = average_call_time.floor(\"s\") average_call_time Timedelta('0 days 00:05:11')  df.loc[df[\"Answered\"] == 0, \"call_end_dt\"] = df[\"DateTime\"] + pd.to_timedelta(average_call_time, unit = \"S\") df.loc[:,(\"DateTime\", \"CallDuration\", \"call_start_dt\", \"call_end_dt\")].sample(5) .dataframe tbody tr th { vertical-align: top; } .dataframe thead th { text-align: right; }  def create_interval(df): df[\"Time_interval\"] = pd.Interval(df[\"call_start_dt\"], df[\"call_end_dt\"]) return df df[\"Time_interval\"] = np.nan df = df.apply(create_interval, axis = 1) df.loc[:(\"call_start_dt\", \"call_end_dt\", \"Time_interval\")].head()     call_start_dt call_end_dt Time_interval     0 2019-12-20 14:03:00 2019-12-20 14:12:43 (2019-12-20 14:03:00, 2019-12-20 14:12:43]   3 2019-12-20 14:27:00 2019-12-20 14:29:14 (2019-12-20 14:27:00, 2019-12-20 14:29:14]   4 2019-12-20 14:28:00 2019-12-20 14:30:07 (2019-12-20 14:28:00, 2019-12-20 14:30:07]   6 2019-12-20 14:35:00 2019-12-20 14:36:10 (2019-12-20 14:35:00, 2019-12-20 14:36:10]   10 2019-12-20 14:40:00 2019-12-20 14:41:45 (2019-12-20 14:40:00, 2019-12-20 14:41:45]    Constructing time intervals between date A and date B, each day with opening hour X and closing hour Y is … tricky :(\nunique_date_list = df[\"Date\"].unique() date_range_start = [] date_range_end = [] frequency = pd.Timedelta(\"5 minutes\") for unique_date in unique_date_list: day_range_start = pd.date_range(start = unique_date + pd.Timedelta(\"7 hours 30 minutes\"), end = unique_date + pd.Timedelta(\"18 hours 30 minutes\") - frequency, freq = frequency ) day_range_end = pd.date_range(start = unique_date + pd.Timedelta(\"7 hours 30 minutes\") + frequency, end = unique_date + pd.Timedelta(\"18 hours 30 minutes\"), freq = frequency ) date_range_start += day_range_start date_range_end += day_range_end verification_range = pd.IntervalIndex.from_arrays(date_range_start, date_range_end) verification_range IntervalIndex([(2019-12-20 07:30:00, 2019-12-20 07:35:00], (2019-12-20 07:35:00, 2019-12-20 07:40:00], (2019-12-20 07:40:00, 2019-12-20 07:45:00], (2019-12-20 07:45:00, 2019-12-20 07:50:00], (2019-12-20 07:50:00, 2019-12-20 07:55:00] ... (2020-10-01 18:05:00, 2020-10-01 18:10:00], (2020-10-01 18:10:00, 2020-10-01 18:15:00], (2020-10-01 18:15:00, 2020-10-01 18:20:00], (2020-10-01 18:20:00, 2020-10-01 18:25:00], (2020-10-01 18:25:00, 2020-10-01 18:30:00]], closed='right', dtype='interval[datetime64[ns]]')  result = [] for verification_interval in verification_range: counter = 0 # we're filtering the main dataframe as there is no point in searching for overlaps in the next day mask_filter_left = (df[\"call_start_dt\"]  verification_interval.left - pd.Timedelta(\"24h\")) mask_filter_right = (df[\"call_end_dt\"]  verification_interval.right + pd.Timedelta(\"24h\")) call_intervals = df.loc[(mask_filter_left \u0026 mask_filter_right), \"Time_interval\"] for call_interval in call_intervals: if verification_interval.overlaps(call_interval): counter += 1 result.append({\"time_interval\": verification_interval, \"total_overlaps\": counter}) estimator = pd.DataFrame(result) estimator.sample(5)     time_interval total_overlaps     13575 (2019-01-09 16:45:00, 2019-01-09 16:50:00] 2   58858 (2020-09-24 17:20:00, 2020-09-24 17:25:00] 1   28128 (2019-06-21 08:30:00, 2019-06-21 08:35:00] 1   52824 (2020-07-23 09:30:00, 2020-07-23 09:35:00] 1   24577 (2019-05-10 09:35:00, 2019-05-10 09:40:00] 3    We got our results, but we’ll only keep the starting date of the interval, it’s much easier to construct graphs with simple dates than time intervals.\nestimator[\"DateTime\"] = estimator[\"time_interval\"].apply(lambda x: x.left) estimator = estimator.loc[:,(\"total_overlaps\",\"DateTime\")].rename({\"total_overlaps\": \"Total\"}, axis = 1) estimator.sample(5)     Total DateTime     34381 1 2019-09-04 12:35:00   46296 2 2020-05-11 15:30:00   33707 2 2019-08-28 11:25:00   38821 3 2019-10-22 08:35:00   38847 1 2019-10-22 10:45:00    Average / Min / Max nb of agents required per hour per day estimator[\"Hour\"] = estimator[\"DateTime\"].dt.hour estimator[\"Day_nb\"] = estimator[\"DateTime\"].dt.day estimator.sample(5)     Total DateTime Hour Day_nb     16620 0 2019-02-11 17:30:00 17 11   35779 0 2019-09-19 08:05:00 8 19   41340 6 2020-01-27 09:30:00 9 27   14365 1 2019-01-17 16:35:00 16 17   18406 1 2019-03-01 12:20:00 12 1    def calc_agg(df): df[\"Total_mean\"] = df[\"Total\"].mean() df[\"Total_mean\"] = np.ceil(df[\"Total_mean\"]) df[\"Total_min\"] = df[\"Total\"].min() df[\"Total_max\"] = df[\"Total\"].max() return df heatmap_table = estimator.groupby([\"Day_nb\", \"Hour\"]).apply(calc_agg).reset_index(drop = True) heatmap_table     Total DateTime Hour Day_nb Total_mean Total_min Total_max     639 0 2019-12-27 16:45:00 16 27 2.0 0 5   33497 1 2019-08-26 15:55:00 15 26 2.0 0 10   46958 0 2020-05-18 15:40:00 15 18 2.0 0 6   43107 1 2020-02-13 13:45:00 13 13 1.0 0 7   56781 3 2020-09-03 09:15:00 9 3 3.0 0 9    alt.data_transformers.disable_max_rows() base = alt.Chart(heatmap_table).encode( x='Hour:O', y='Day_nb:O' ) color_avg = base.mark_rect().encode( color= alt.Color('Total_mean:Q', scale=alt.Scale(scheme='goldred')) ) text_avg = base.mark_text(baseline='middle').encode( text = 'max(Total_mean):Q' ) heatmap = color_avg + text_avg heatmap ","wordCount":"2653","inLanguage":"en","image":"https://sorinbiriescu.github.io/projects/call_analyzer_estimator/cover_call_analyzer.png","datePublished":"0001-01-01T00:00:00Z","dateModified":"0001-01-01T00:00:00Z","mainEntityOfPage":{"@type":"WebPage","@id":"https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/"},"publisher":{"@type":"Organization","name":"Sorin BIRIESCU","logo":{"@type":"ImageObject","url":"https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E"}}}</script>
+</head>
+<body id=top>
+<script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add('dark')</script>
+<header class=header>
+<nav class=nav>
+<div class=logo>
+<a href=https://sorinbiriescu.github.io/en/ accesskey=h title="Sorin BIRIESCU (Alt + H)">Sorin BIRIESCU</a>
+<span class=logo-switches>
+<button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
+<ul class=lang-switch><li>|</li>
+<li>
+<a href=https://sorinbiriescu.github.io/fr/ title="🇫🇷 En Français" aria-label=":fr: En Français">🇫🇷 En Français</a>
+</li>
+</ul>
+</span>
+</div>
+<ul id=menu>
+<li>
+<a href=https://sorinbiriescu.github.io/en/cv/cv title=CV>
+<span>CV</span>
+</a>
+</li>
+<li>
+<a href=https://sorinbiriescu.github.io/en/projects/ title=Projects>
+<span>Projects</span>
+</a>
+</li>
+<li>
+<a href=https://sorinbiriescu.github.io/en/skills title="Skill List">
+<span>Skill List</span>
+</a>
+</li>
+<li>
+<a href=https://sorinbiriescu.github.io/en/tags/ title="Skill Tags">
+<span>Skill Tags</span>
+</a>
+</li>
+<li>
+<a href=https://sorinbiriescu.github.io/en/contact_en title=Contact>
+<span>Contact</span>
+</a>
+</li>
+</ul>
+</nav>
+</header>
+<main class=main>
+<article class=post-single>
+<header class=post-header>
+<h1 class=post-title>
+Call analyzer and estimator
+</h1>
+<div class=post-description>
+Time series analysis on support calls
+</div>
+<div class=post-meta>13 min
+</div>
+</header>
+<figure class=entry-cover><img loading=lazy src=https://sorinbiriescu.github.io/projects/call_analyzer_estimator/cover_call_analyzer.png alt>
+<p></p>
+</figure><div class=toc>
+<details>
+<summary accesskey=c title="(Alt + C)">
+<span class=details>Table of Contents</span>
+</summary>
+<div class=inner><ul>
+<li>
+<a href=#data-import-and-cleaning aria-label="Data import and cleaning">Data import and cleaning</a><ul>
+<li>
+<a href=#column-data-format aria-label="Column data format">Column data format</a></li></ul>
+</li>
+<li>
+<a href=#data-analysis aria-label="Data Analysis">Data Analysis</a><ul>
+<li>
+<a href=#total-calls-per-day aria-label="Total calls per day">Total calls per day</a></li>
+<li>
+<a href=#total-calls-per-month---volume aria-label="Total calls per month - volume">Total calls per month - volume</a></li></ul>
+</li>
+<li>
+<a href=#estimator aria-label=Estimator>Estimator</a></li>
+<li>
+<a href=#average--min--max-nb-of-agents-required-per-hour-per-day aria-label="Average / Min / Max nb of agents required per hour per day">Average / Min / Max nb of agents required per hour per day</a>
+</li>
+</ul>
+</div>
+</details>
+</div>
+<div class=post-content><p>This is based on one of my previous analyses for my clients. My client has an IT support department which receives telephone calls for support request. The team providing support is limited due to budget constraints and needs to do also onsite support as well as the aforementioned remote support.</p>
+<p><img loading=lazy src=/projects/call_analyzer_estimator/team_diagram.png alt="Team diagram">
+</p>
+<p>My client wants to know how many persons should be available to pickup telephone calls in certain periods (hour interval, days of the week, month) in order to properly assign the technicians to either provide remote support or go onsite. Too many people picking up calls and there&rsquo;s not enought work for everybody and onsite support will encounter delays. Not enough people to pickup telephone calls and the service quality will suffer (and possibly bring also penalties stipulated in the contract).</p>
+<p>The questions that need answering are:</p>
+<ol>
+<li>What are the overall characteristics of the remote support telephone calls?</li>
+<li>How many technicians are required to pick up calls to fulfill the required service?</li>
+</ol>
+<p>Due to confidentiality of data, the data related to the calls is not real, however I tried as much as possible to respect the distribution of calls during the day, week and periods of the year. In all other aspects, such as column data format, the imaginary data that I&rsquo;m using for this analysis example is accurate.</p>
+<p>In the real situation, the telephone calls data came in XML format exported by an Alcatel-Lucent ACD and imported by another Python script in a SQLite database. The database was used for an in-house build telephone console to visualize call activity in near real-time.</p>
+<blockquote>
+<p>ACD - An automated call distribution system, commonly known as automatic call distributor (ACD), is a telephony device that answers and distributes incoming calls to a specific group of terminals or agents within an organization.</p>
+</blockquote>
+<h1 id=data-import-and-cleaning>Data import and cleaning<a hidden class=anchor aria-hidden=true href=#data-import-and-cleaning>#</a></h1>
+<p>First thing first, the data needs to be imported from the SQLite database and loaded into a Pandas dataframe for analysis.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#f92672>import</span> sqlite3
 <span style=color:#f92672>from</span> sqlite3 <span style=color:#f92672>import</span> Error
-<span style=color:#f92672>import</span> pandas <span style=color:#f92672>as</span> pd
-<span style=color:#f92672>import</span> numpy <span style=color:#f92672>as</span> np
-</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>create_connection</span>(path):
-    connection <span style=color:#f92672>=</span> None
+<span style=color:#f92672>import</span> pandas <span style=color:#66d9ef>as</span> pd
+<span style=color:#f92672>import</span> numpy <span style=color:#66d9ef>as</span> np
+</code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>create_connection</span>(path):
+    connection <span style=color:#f92672>=</span> <span style=color:#66d9ef>None</span>
     <span style=color:#66d9ef>try</span>:
         connection <span style=color:#f92672>=</span> sqlite3<span style=color:#f92672>.</span>connect(path)
-        <span style=color:#66d9ef>print</span>(<span style=color:#e6db74>&#34;Connection to SQLite DB successful&#34;</span>)
+        print(<span style=color:#e6db74>&#34;Connection to SQLite DB successful&#34;</span>)
 
     <span style=color:#66d9ef>except</span> Error <span style=color:#66d9ef>as</span> e:
-        <span style=color:#66d9ef>print</span>(f<span style=color:#e6db74>&#34;The error &#39;{e}&#39; occurred&#34;</span>)
+        print(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;The error &#39;</span><span style=color:#e6db74>{</span>e<span style=color:#e6db74>}</span><span style=color:#e6db74>&#39; occurred&#34;</span>)
         
     <span style=color:#66d9ef>return</span> connection
-</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>execute_read_query</span>(connection, query):
+</code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>execute_read_query</span>(connection, query):
     cursor <span style=color:#f92672>=</span> connection<span style=color:#f92672>.</span>cursor()
-    result <span style=color:#f92672>=</span> None
+    result <span style=color:#f92672>=</span> <span style=color:#66d9ef>None</span>
     <span style=color:#66d9ef>try</span>:
         cursor<span style=color:#f92672>.</span>execute(query)
         result <span style=color:#f92672>=</span> cursor<span style=color:#f92672>.</span>fetchall()
         <span style=color:#66d9ef>return</span> result
     <span style=color:#66d9ef>except</span> Error <span style=color:#66d9ef>as</span> e:
-        <span style=color:#66d9ef>print</span>(f<span style=color:#e6db74>&#34;The error &#39;{e}&#39; occurred&#34;</span>)
-</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>connection <span style=color:#f92672>=</span> create_connection(<span style=color:#e6db74>&#34;./call_journal.db&#34;</span>)
-</code></pre></div><p><code>Connection to SQLite DB successful</code></p><p>Data filtering sometimes starts with the SQL query. In my case, I&rsquo;m only selecting data that I judged to be relevant to my analysis. However, it&rsquo;s good to keep in mind that left out columns may contain relevant or crucial information. It&rsquo;s best that in some cases the initial DB is reinvestigated to dig out more useful information.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>select_call_records <span style=color:#f92672>=</span> <span style=color:#e6db74>&#39;&#39;&#39;
+        print(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;The error &#39;</span><span style=color:#e6db74>{</span>e<span style=color:#e6db74>}</span><span style=color:#e6db74>&#39; occurred&#34;</span>)
+</code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>connection <span style=color:#f92672>=</span> create_connection(<span style=color:#e6db74>&#34;./call_journal.db&#34;</span>)
+</code></pre></div><p><code>Connection to SQLite DB successful</code></p>
+<p>Data filtering sometimes starts with the SQL query. In my case, I&rsquo;m only selecting data that I judged to be relevant to my analysis. However, it&rsquo;s good to keep in mind that left out columns may contain relevant or crucial information. It&rsquo;s best that in some cases the initial DB is reinvestigated to dig out more useful information.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>select_call_records <span style=color:#f92672>=</span> <span style=color:#e6db74>&#39;&#39;&#39;
 </span><span style=color:#e6db74>    SELECT TicketType,
 </span><span style=color:#e6db74>        ChargedUserID,
 </span><span style=color:#e6db74>        SubscriberName,
@@ -51,8 +194,92 @@ db_cols <span style=color:#f92672>=</span> [<span style=color:#e6db74>&#34;Ticke
 call_records <span style=color:#f92672>=</span> execute_read_query(connection, select_call_records)
 
 df <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>DataFrame(call_records, columns <span style=color:#f92672>=</span> db_cols)
-</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>display(df<span style=color:#f92672>.</span>sample(<span style=color:#ae81ff>5</span>))
-</code></pre></div><table><thead><tr><th></th><th><strong>TicketType</strong></th><th><strong>ChargedUserID</strong></th><th><strong>SubscriberName</strong></th><th><strong>CommunicationType</strong></th><th><strong>Date</strong></th><th><strong>Time</strong></th><th><strong>DateTime</strong></th><th><strong>CallDuration</strong></th><th><strong>CallDurationMV</strong></th><th><strong>RingingDuration</strong></th></tr></thead><tbody><tr><td><strong>42299</strong></td><td>Call</td><td>15</td><td>POSTE 6</td><td>IncomingTransfer</td><td>2020-05-18</td><td>14:25:00</td><td>2020-05-18 14:25:00</td><td>00:05:27</td><td>0:00:00</td><td>00:00:00</td></tr><tr><td><strong>39961</strong></td><td>Call</td><td>44</td><td>POSTE 8</td><td>Outgoing</td><td>2020-03-11</td><td>08:39:00</td><td>2020-03-11 08:39:00</td><td>00:00:05</td><td>0:00:00</td><td>00:00:00</td></tr><tr><td><strong>45878</strong></td><td>Call</td><td>33</td><td>MV 2</td><td>IncomingTransfer</td><td>2020-06-15</td><td>13:36:00</td><td>2020-06-15 13:36:00</td><td>0:00:00</td><td>00:00:04</td><td>00:00:00</td></tr><tr><td><strong>36741</strong></td><td>Call</td><td>19</td><td>ACD</td><td>Incoming</td><td>2020-02-21</td><td>14:04:00</td><td>2020-02-21 14:04:00</td><td>0:00:00</td><td>00:00:10</td><td>00:00:00</td></tr><tr><td><strong>9003</strong></td><td>Call</td><td>4</td><td>POSTE 1</td><td>IncomingTransfer</td><td>2018-11-21</td><td>11:41:00</td><td>2018-11-21 11:41:00</td><td>0:03:16</td><td>0:00:00</td><td>0:00:06</td></tr></tbody></table><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df<span style=color:#f92672>.</span>info()
+</code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>display(df<span style=color:#f92672>.</span>sample(<span style=color:#ae81ff>5</span>))
+</code></pre></div><table>
+<thead>
+<tr>
+<th></th>
+<th><strong>TicketType</strong></th>
+<th><strong>ChargedUserID</strong></th>
+<th><strong>SubscriberName</strong></th>
+<th><strong>CommunicationType</strong></th>
+<th><strong>Date</strong></th>
+<th><strong>Time</strong></th>
+<th><strong>DateTime</strong></th>
+<th><strong>CallDuration</strong></th>
+<th><strong>CallDurationMV</strong></th>
+<th><strong>RingingDuration</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>42299</strong></td>
+<td>Call</td>
+<td>15</td>
+<td>POSTE 6</td>
+<td>IncomingTransfer</td>
+<td>2020-05-18</td>
+<td>14:25:00</td>
+<td>2020-05-18 14:25:00</td>
+<td>00:05:27</td>
+<td>0:00:00</td>
+<td>00:00:00</td>
+</tr>
+<tr>
+<td><strong>39961</strong></td>
+<td>Call</td>
+<td>44</td>
+<td>POSTE 8</td>
+<td>Outgoing</td>
+<td>2020-03-11</td>
+<td>08:39:00</td>
+<td>2020-03-11 08:39:00</td>
+<td>00:00:05</td>
+<td>0:00:00</td>
+<td>00:00:00</td>
+</tr>
+<tr>
+<td><strong>45878</strong></td>
+<td>Call</td>
+<td>33</td>
+<td>MV 2</td>
+<td>IncomingTransfer</td>
+<td>2020-06-15</td>
+<td>13:36:00</td>
+<td>2020-06-15 13:36:00</td>
+<td>0:00:00</td>
+<td>00:00:04</td>
+<td>00:00:00</td>
+</tr>
+<tr>
+<td><strong>36741</strong></td>
+<td>Call</td>
+<td>19</td>
+<td>ACD</td>
+<td>Incoming</td>
+<td>2020-02-21</td>
+<td>14:04:00</td>
+<td>2020-02-21 14:04:00</td>
+<td>0:00:00</td>
+<td>00:00:10</td>
+<td>00:00:00</td>
+</tr>
+<tr>
+<td><strong>9003</strong></td>
+<td>Call</td>
+<td>4</td>
+<td>POSTE 1</td>
+<td>IncomingTransfer</td>
+<td>2018-11-21</td>
+<td>11:41:00</td>
+<td>2018-11-21 11:41:00</td>
+<td>0:03:16</td>
+<td>0:00:00</td>
+<td>0:00:06</td>
+</tr>
+</tbody>
+</table>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df<span style=color:#f92672>.</span>info()
 </code></pre></div><pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
 RangeIndex: 63670 entries, 0 to 63669
 Data columns (total 10 columns):
@@ -70,19 +297,125 @@ Data columns (total 10 columns):
  9   RingingDuration    63670 non-null  object
 dtypes: object(10)
 memory usage: 4.9+ MB
-</code></pre><p>The important thing after data import is to try to understand what data is presented in the columns. Not being aware of what&rsquo;s the purpose of the data or how it was generated could give innacurate results. I&rsquo;ll come with examples below.</p><p>The documentation of the source of information (in my case the ACD) was the first step in understanding how it generates the data. After going through (way too many) documentation pages, I found the following:</p><ol><li>calls are registered as tickets in the ACD (tickets are single units of information of certain operations, like calls, agent activity etc.)</li><li>calls are received first by SubscriberName ACD, then transfered to SubscriberName agents (POSTE 1, POSTE 2, MV etc.) for call pickup or sent to voicemail. This is a very important piece of information as the ACD registers once the call when it reaches the system and another ticket when it&rsquo;s transfered and answered by the agent. Basically, the total number of calls is actually HALF. Example below<table><thead><tr><th>SubscriberName</th><th>CommunicationType</th><th>DateTime</th><th>DialledNumber</th></tr></thead><tbody><tr><td>ACD</td><td>Incoming</td><td>2019-11-28 10:38:00</td><td>0750.123.456</td></tr><tr><td>POSTE 1</td><td>IncomingTransfer</td><td>2019-11-28 10:38:00</td><td>0750.123.456</td></tr></tbody></table></li></ol><p>First, the call reaches ACD, then the same call gets transfered to agent (POSTE 1).</p><p><code>Call -- received --> ACD -- transfered --> POSTE 1</code></p><p>Since we are only interested in analyzing unique calls and not how they are routed, we need to drop all rows with SubscriberName == ACD to get the real numbers.</p><ol start=3><li>The missed calls are not marked specifically. The call routing logic is that it&rsquo;s either answered by someone or it&rsquo;s redirected to voicemail.<table><thead><tr><th>SubscriberName</th><th>CommunicationType</th><th>DateTime</th><th>DialledNumber</th></tr></thead><tbody><tr><td>ACD</td><td>Incoming</td><td>2019-11-28 16:27:00</td><td>0750.123.456</td></tr><tr><td>MV 1</td><td>IncomingTransfer</td><td>2019-11-28 16:28:00</td><td>0750.123.456</td></tr></tbody></table></li></ol><p>The call reaches the ACD, no one can pickup the call, and the call is redirected to voicemail MV1.</p><p><code>Call -- received --> ACD -- transfered --> POSTE 1</code></p><p>Again, same history as before, for the same call, 2 tickets are made. We&rsquo;ll drop the lines with SubscriberName = ACD</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>loc[df[<span style=color:#e6db74>&#34;SubscriberName&#34;</span>] <span style=color:#f92672>!=</span> <span style=color:#e6db74>&#34;ACD&#34;</span>]
-</code></pre></div><p>Now, we&rsquo;ll continue looking into the other columns.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;TicketType&#34;</span>]<span style=color:#f92672>.</span>unique()
-</code></pre></div><p><code>array(['Call'], dtype=object)</code></p><p>Since &ldquo;TicketType&rdquo; doesn&rsquo;t hold other values than &ldquo;Call&rdquo;, it has no value to us, so we&rsquo;ll drop it.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df<span style=color:#f92672>.</span>drop(labels <span style=color:#f92672>=</span> [<span style=color:#e6db74>&#34;TicketType&#34;</span>], axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>, inplace <span style=color:#f92672>=</span> True)
-</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;ChargedUserID&#34;</span>]<span style=color:#f92672>.</span>unique()
-</code></pre></div><p><code>array(['13', '14', '10', '33', '32', '44', '11', '15', '12', '59', '30', '42', '01', '04', '03', '05', '02', '06', '07', '08', '43'], dtype=object)</code></p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;SubscriberName&#34;</span>]<span style=color:#f92672>.</span>unique()
-</code></pre></div><p><code>array(['POSTE 4', 'POSTE 5', 'POSTE 1', 'MV 2', 'MV 1', 'POSTE 8', 'POSTE 2', 'POSTE 6', 'POSTE 3', 'POSTE 7'], dtype=object)</code></p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>]<span style=color:#f92672>.</span>unique()
-</code></pre></div><p><code>array(['IncomingTransfer', 'Outgoing', 'OutgoingTransfer', 'OutgoingTransferTransit', 'IncomingTransferTransit'], dtype=object)</code></p><p>This will be filtered as well, as we&rsquo;re only interested in incoming calls. One curious this is the &ldquo;IncomingTransferTransit&rdquo; value. We&rsquo;ll check it out:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df<span style=color:#f92672>.</span>loc[df[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>] <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;IncomingTransferTransit&#39;</span>]
-</code></pre></div><table><thead><tr><th></th><th><strong>ChargedUserID</strong></th><th><strong>SubscriberName</strong></th><th><strong>CommunicationType</strong></th><th><strong>Date</strong></th><th><strong>Time</strong></th><th><strong>DateTime</strong></th><th><strong>CallDuration</strong></th><th><strong>CallDurationMV</strong></th><th><strong>RingingDuration</strong></th></tr></thead><tbody><tr><td><strong>2329</strong></td><td>14</td><td>POSTE 5</td><td>IncomingTransferTransit</td><td>2019-11-05</td><td>13:12:00</td><td>2019-11-05 13:12:00</td><td>00:00:09</td><td>0:00:00</td><td>00:00:00</td></tr></tbody></table><p>Unfortunately, I could not find something relevand in the documentation and, since it&rsquo;s only one value, we&rsquo;ll drop it.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>loc[df[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>] <span style=color:#f92672>!=</span> <span style=color:#e6db74>&#39;IncomingTransferTransit&#39;</span>]
-</code></pre></div><p>One last thing to check is for calls on Saturday and Sunday. During an initial run of this report, the data contained calls received on saturday and sunday.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;Date&#34;</span>] <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>to_datetime(df[<span style=color:#e6db74>&#34;Date&#34;</span>], format <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;%Y-%m-</span><span style=color:#e6db74>%d</span><span style=color:#e6db74>&#34;</span>)
+</code></pre>
+<p>The important thing after data import is to try to understand what data is presented in the columns. Not being aware of what&rsquo;s the purpose of the data or how it was generated could give innacurate results. I&rsquo;ll come with examples below.</p>
+<p>The documentation of the source of information (in my case the ACD) was the first step in understanding how it generates the data. After going through (way too many) documentation pages, I found the following:</p>
+<ol>
+<li>calls are registered as tickets in the ACD (tickets are single units of information of certain operations, like calls, agent activity etc.)</li>
+<li>calls are received first by SubscriberName ACD, then transfered to SubscriberName agents (POSTE 1, POSTE 2, MV etc.) for call pickup or sent to voicemail. This is a very important piece of information as the ACD registers once the call when it reaches the system and another ticket when it&rsquo;s transfered and answered by the agent. Basically, the total number of calls is actually HALF. Example below
+<table>
+<thead>
+<tr>
+<th>SubscriberName</th>
+<th>CommunicationType</th>
+<th>DateTime</th>
+<th>DialledNumber</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ACD</td>
+<td>Incoming</td>
+<td>2019-11-28 10:38:00</td>
+<td>0750.123.456</td>
+</tr>
+<tr>
+<td>POSTE 1</td>
+<td>IncomingTransfer</td>
+<td>2019-11-28 10:38:00</td>
+<td>0750.123.456</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ol>
+<p>First, the call reaches ACD, then the same call gets transfered to agent (POSTE 1).</p>
+<p><code>Call -- received --> ACD -- transfered --> POSTE 1</code></p>
+<p>Since we are only interested in analyzing unique calls and not how they are routed, we need to drop all rows with SubscriberName == ACD to get the real numbers.</p>
+<ol start=3>
+<li>The missed calls are not marked specifically. The call routing logic is that it&rsquo;s either answered by someone or it&rsquo;s redirected to voicemail.
+<table>
+<thead>
+<tr>
+<th>SubscriberName</th>
+<th>CommunicationType</th>
+<th>DateTime</th>
+<th>DialledNumber</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ACD</td>
+<td>Incoming</td>
+<td>2019-11-28 16:27:00</td>
+<td>0750.123.456</td>
+</tr>
+<tr>
+<td>MV 1</td>
+<td>IncomingTransfer</td>
+<td>2019-11-28 16:28:00</td>
+<td>0750.123.456</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ol>
+<p>The call reaches the ACD, no one can pickup the call, and the call is redirected to voicemail MV1.</p>
+<p><code>Call -- received --> ACD -- transfered --> POSTE 1</code></p>
+<p>Again, same history as before, for the same call, 2 tickets are made. We&rsquo;ll drop the lines with SubscriberName = ACD</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>loc[df[<span style=color:#e6db74>&#34;SubscriberName&#34;</span>] <span style=color:#f92672>!=</span> <span style=color:#e6db74>&#34;ACD&#34;</span>]
+</code></pre></div><p>Now, we&rsquo;ll continue looking into the other columns.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;TicketType&#34;</span>]<span style=color:#f92672>.</span>unique()
+</code></pre></div><p><code>array(['Call'], dtype=object)</code></p>
+<p>Since &ldquo;TicketType&rdquo; doesn&rsquo;t hold other values than &ldquo;Call&rdquo;, it has no value to us, so we&rsquo;ll drop it.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df<span style=color:#f92672>.</span>drop(labels <span style=color:#f92672>=</span> [<span style=color:#e6db74>&#34;TicketType&#34;</span>], axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>, inplace <span style=color:#f92672>=</span> <span style=color:#66d9ef>True</span>)
+</code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;ChargedUserID&#34;</span>]<span style=color:#f92672>.</span>unique()
+</code></pre></div><p><code>array(['13', '14', '10', '33', '32', '44', '11', '15', '12', '59', '30', '42', '01', '04', '03', '05', '02', '06', '07', '08', '43'], dtype=object)</code></p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;SubscriberName&#34;</span>]<span style=color:#f92672>.</span>unique()
+</code></pre></div><p><code>array(['POSTE 4', 'POSTE 5', 'POSTE 1', 'MV 2', 'MV 1', 'POSTE 8', 'POSTE 2', 'POSTE 6', 'POSTE 3', 'POSTE 7'], dtype=object)</code></p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>]<span style=color:#f92672>.</span>unique()
+</code></pre></div><p><code>array(['IncomingTransfer', 'Outgoing', 'OutgoingTransfer', 'OutgoingTransferTransit', 'IncomingTransferTransit'], dtype=object)</code></p>
+<p>This will be filtered as well, as we&rsquo;re only interested in incoming calls. One curious this is the &ldquo;IncomingTransferTransit&rdquo; value. We&rsquo;ll check it out:</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df<span style=color:#f92672>.</span>loc[df[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>] <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;IncomingTransferTransit&#39;</span>]
+</code></pre></div><table>
+<thead>
+<tr>
+<th></th>
+<th><strong>ChargedUserID</strong></th>
+<th><strong>SubscriberName</strong></th>
+<th><strong>CommunicationType</strong></th>
+<th><strong>Date</strong></th>
+<th><strong>Time</strong></th>
+<th><strong>DateTime</strong></th>
+<th><strong>CallDuration</strong></th>
+<th><strong>CallDurationMV</strong></th>
+<th><strong>RingingDuration</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>2329</strong></td>
+<td>14</td>
+<td>POSTE 5</td>
+<td>IncomingTransferTransit</td>
+<td>2019-11-05</td>
+<td>13:12:00</td>
+<td>2019-11-05 13:12:00</td>
+<td>00:00:09</td>
+<td>0:00:00</td>
+<td>00:00:00</td>
+</tr>
+</tbody>
+</table>
+<p>Unfortunately, I could not find something relevand in the documentation and, since it&rsquo;s only one value, we&rsquo;ll drop it.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>loc[df[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>] <span style=color:#f92672>!=</span> <span style=color:#e6db74>&#39;IncomingTransferTransit&#39;</span>]
+</code></pre></div><p>One last thing to check is for calls on Saturday and Sunday. During an initial run of this report, the data contained calls received on saturday and sunday.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;Date&#34;</span>] <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>to_datetime(df[<span style=color:#e6db74>&#34;Date&#34;</span>], format <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;%Y-%m-</span><span style=color:#e6db74>%d</span><span style=color:#e6db74>&#34;</span>)
 df[<span style=color:#e6db74>&#34;Day_nb&#34;</span>] <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;Date&#34;</span>]<span style=color:#f92672>.</span>dt<span style=color:#f92672>.</span>dayofweek
 df <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>loc[<span style=color:#f92672>~</span>df[<span style=color:#e6db74>&#34;Day_nb&#34;</span>]<span style=color:#f92672>.</span>isin([<span style=color:#ae81ff>5</span>,<span style=color:#ae81ff>6</span>])]
-df<span style=color:#f92672>.</span>drop(labels <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;Day_nb&#34;</span>, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>, inplace <span style=color:#f92672>=</span> True)
-</code></pre></div><p>As a last check, we&rsquo;ll look at the total values in columns, to check whether we need to dig deeper into the data.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df<span style=color:#f92672>.</span>info()
+df<span style=color:#f92672>.</span>drop(labels <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;Day_nb&#34;</span>, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>, inplace <span style=color:#f92672>=</span> <span style=color:#66d9ef>True</span>)
+</code></pre></div><p>As a last check, we&rsquo;ll look at the total values in columns, to check whether we need to dig deeper into the data.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df<span style=color:#f92672>.</span>info()
 </code></pre></div><pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
 Int64Index: 44890 entries, 0 to 63668
 Data columns (total 9 columns):
@@ -99,7 +432,11 @@ Data columns (total 9 columns):
   8   RingingDuration    44890 non-null  object        
 dtypes: datetime64[ns](1), object(8)
 memory usage: 3.4+ MB
-</code></pre><p>All looks OK so far, we&rsquo;ll proceed to setting the columns data types</p><h2 id=column-data-format>Column data format<a hidden class=anchor aria-hidden=true href=#column-data-format>#</a></h2><p>Next, we&rsquo;ll set the proper type of certain columns</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;ChargedUserID&#34;</span>] <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;ChargedUserID&#34;</span>]<span style=color:#f92672>.</span>astype(<span style=color:#e6db74>&#34;category&#34;</span>)
+</code></pre>
+<p>All looks OK so far, we&rsquo;ll proceed to setting the columns data types</p>
+<h2 id=column-data-format>Column data format<a hidden class=anchor aria-hidden=true href=#column-data-format>#</a></h2>
+<p>Next, we&rsquo;ll set the proper type of certain columns</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;ChargedUserID&#34;</span>] <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;ChargedUserID&#34;</span>]<span style=color:#f92672>.</span>astype(<span style=color:#e6db74>&#34;category&#34;</span>)
 df[<span style=color:#e6db74>&#34;SubscriberName&#34;</span>] <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;SubscriberName&#34;</span>]<span style=color:#f92672>.</span>astype(<span style=color:#e6db74>&#34;category&#34;</span>)
 df[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>] <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>]<span style=color:#f92672>.</span>astype(<span style=color:#e6db74>&#34;category&#34;</span>)
 
@@ -109,7 +446,7 @@ df[<span style=color:#e6db74>&#34;DateTime&#34;</span>] <span style=color:#f9267
 df[<span style=color:#e6db74>&#34;CallDuration&#34;</span>] <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>to_timedelta(df[<span style=color:#e6db74>&#34;CallDuration&#34;</span>])
 df[<span style=color:#e6db74>&#34;CallDurationMV&#34;</span>] <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>to_timedelta(df[<span style=color:#e6db74>&#34;CallDurationMV&#34;</span>])
 df[<span style=color:#e6db74>&#34;RingingDuration&#34;</span>] <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>to_timedelta(df[<span style=color:#e6db74>&#34;RingingDuration&#34;</span>])
-</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df<span style=color:#f92672>.</span>info()
+</code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df<span style=color:#f92672>.</span>info()
 </code></pre></div><pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
 Int64Index: 44890 entries, 0 to 63668
 Data columns (total 9 columns):
@@ -126,41 +463,258 @@ Data columns (total 9 columns):
  8   RingingDuration    44890 non-null  timedelta64[ns]
 dtypes: category(3), datetime64[ns](3), timedelta64[ns](3)
 memory usage: 2.5 MB
-</code></pre><h1 id=data-analysis>Data Analysis<a hidden class=anchor aria-hidden=true href=#data-analysis>#</a></h1><p>We&rsquo;ll start with some basic data exploration, to see some trends. Since we&rsquo;re only interested in incoming calls, we&rsquo;ll create a mask and filter the data</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#f92672>import</span> altair <span style=color:#f92672>as</span> alt
-</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>mask_incoming <span style=color:#f92672>=</span> (df[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>] <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;IncomingTransfer&#34;</span>)
+</code></pre>
+<h1 id=data-analysis>Data Analysis<a hidden class=anchor aria-hidden=true href=#data-analysis>#</a></h1>
+<p>We&rsquo;ll start with some basic data exploration, to see some trends. Since we&rsquo;re only interested in incoming calls, we&rsquo;ll create a mask and filter the data</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#f92672>import</span> altair <span style=color:#66d9ef>as</span> alt
+</code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>mask_incoming <span style=color:#f92672>=</span> (df[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>] <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;IncomingTransfer&#34;</span>)
 df <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>loc[mask_incoming]
-</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;Answered&#34;</span>] <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>
+</code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;Answered&#34;</span>] <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>
 df<span style=color:#f92672>.</span>loc[df[<span style=color:#e6db74>&#34;SubscriberName&#34;</span>]<span style=color:#f92672>.</span>str<span style=color:#f92672>.</span>startswith(<span style=color:#e6db74>&#39;POSTE&#39;</span>), <span style=color:#e6db74>&#34;Answered&#34;</span>] <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>
 df<span style=color:#f92672>.</span>sample(<span style=color:#ae81ff>5</span>)
-</code></pre></div><table><thead><tr><th></th><th><strong>ChargedUserID</strong></th><th><strong>SubscriberName</strong></th><th><strong>CommunicationType</strong></th><th><strong>Date</strong></th><th><strong>Time</strong></th><th><strong>DateTime</strong></th><th><strong>CallDuration</strong></th><th><strong>CallDurationMV</strong></th><th><strong>RingingDuration</strong></th><th><strong>Answered</strong></th></tr></thead><tbody><tr><td><strong>59243</strong></td><td>33</td><td>MV 2</td><td>IncomingTransfer</td><td>2020-09-08</td><td>2020-09-08</td><td>2020-09-08 09:00:00</td><td>0 days 00:00:00</td><td>0 days 00:00:28</td><td>0 days 00:00:00</td><td>0</td></tr><tr><td><strong>14136</strong></td><td>5</td><td>POSTE 6</td><td>IncomingTransfer</td><td>2019-03-06</td><td>2019-03-06</td><td>2019-03-06 10:37:00</td><td>0 days 00:03:44</td><td>0 days 00:00:00</td><td>0 days 00:00:06</td><td>1</td></tr><tr><td><strong>45790</strong></td><td>33</td><td>MV 2</td><td>IncomingTransfer</td><td>2020-06-15</td><td>2020-06-15</td><td>2020-06-15 11:18:00</td><td>0 days 00:00:00</td><td>0 days 00:00:03</td><td>0 days 00:00:00</td><td>0</td></tr><tr><td><strong>57021</strong></td><td>32</td><td>MV 1</td><td>IncomingTransfer</td><td>2020-08-26</td><td>2020-08-26</td><td>2020-08-26 08:45:00</td><td>0 days 00:00:00</td><td>0 days 00:00:05</td><td>0 days 00:00:00</td><td>0</td></tr><tr><td><strong>830</strong></td><td>13</td><td>POSTE 4</td><td>IncomingTransfer</td><td>2019-07-25</td><td>2019-07-25</td><td>2019-07-25 08:49:00</td><td>0 days 00:03:47</td><td>0 days 00:00:00</td><td>0 days 00:00:00</td><td>1</td></tr></tbody></table><h2 id=total-calls-per-day>Total calls per day<a hidden class=anchor aria-hidden=true href=#total-calls-per-day>#</a></h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>total_per_day <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>groupby(<span style=color:#e6db74>&#34;Date&#34;</span>)[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>]<span style=color:#f92672>.</span>count()<span style=color:#f92672>.</span>reset_index()<span style=color:#f92672>.</span>rename({<span style=color:#e6db74>&#34;CommunicationType&#34;</span>: <span style=color:#e6db74>&#34;Total&#34;</span>}, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>)
+</code></pre></div><table>
+<thead>
+<tr>
+<th></th>
+<th><strong>ChargedUserID</strong></th>
+<th><strong>SubscriberName</strong></th>
+<th><strong>CommunicationType</strong></th>
+<th><strong>Date</strong></th>
+<th><strong>Time</strong></th>
+<th><strong>DateTime</strong></th>
+<th><strong>CallDuration</strong></th>
+<th><strong>CallDurationMV</strong></th>
+<th><strong>RingingDuration</strong></th>
+<th><strong>Answered</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>59243</strong></td>
+<td>33</td>
+<td>MV 2</td>
+<td>IncomingTransfer</td>
+<td>2020-09-08</td>
+<td>2020-09-08</td>
+<td>2020-09-08 09:00:00</td>
+<td>0 days 00:00:00</td>
+<td>0 days 00:00:28</td>
+<td>0 days 00:00:00</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>14136</strong></td>
+<td>5</td>
+<td>POSTE 6</td>
+<td>IncomingTransfer</td>
+<td>2019-03-06</td>
+<td>2019-03-06</td>
+<td>2019-03-06 10:37:00</td>
+<td>0 days 00:03:44</td>
+<td>0 days 00:00:00</td>
+<td>0 days 00:00:06</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>45790</strong></td>
+<td>33</td>
+<td>MV 2</td>
+<td>IncomingTransfer</td>
+<td>2020-06-15</td>
+<td>2020-06-15</td>
+<td>2020-06-15 11:18:00</td>
+<td>0 days 00:00:00</td>
+<td>0 days 00:00:03</td>
+<td>0 days 00:00:00</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>57021</strong></td>
+<td>32</td>
+<td>MV 1</td>
+<td>IncomingTransfer</td>
+<td>2020-08-26</td>
+<td>2020-08-26</td>
+<td>2020-08-26 08:45:00</td>
+<td>0 days 00:00:00</td>
+<td>0 days 00:00:05</td>
+<td>0 days 00:00:00</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>830</strong></td>
+<td>13</td>
+<td>POSTE 4</td>
+<td>IncomingTransfer</td>
+<td>2019-07-25</td>
+<td>2019-07-25</td>
+<td>2019-07-25 08:49:00</td>
+<td>0 days 00:03:47</td>
+<td>0 days 00:00:00</td>
+<td>0 days 00:00:00</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<h2 id=total-calls-per-day>Total calls per day<a hidden class=anchor aria-hidden=true href=#total-calls-per-day>#</a></h2>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>total_per_day <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>groupby(<span style=color:#e6db74>&#34;Date&#34;</span>)[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>]<span style=color:#f92672>.</span>count()<span style=color:#f92672>.</span>reset_index()<span style=color:#f92672>.</span>rename({<span style=color:#e6db74>&#34;CommunicationType&#34;</span>: <span style=color:#e6db74>&#34;Total&#34;</span>}, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>)
 total_per_day<span style=color:#f92672>.</span>sample(<span style=color:#ae81ff>5</span>)
-</code></pre></div><table><thead><tr><th></th><th><strong>Date</strong></th><th><strong>Total</strong></th></tr></thead><tbody><tr><td><strong>130</strong></td><td>2019-04-18</td><td>47</td></tr><tr><td><strong>409</strong></td><td>2020-08-05</td><td>53</td></tr><tr><td><strong>195</strong></td><td>2019-07-26</td><td>66</td></tr><tr><td><strong>329</strong></td><td>2020-02-18</td><td>139</td></tr><tr><td><strong>337</strong></td><td>2020-02-28</td><td>53</td></tr></tbody></table><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>alt<span style=color:#f92672>.</span>Chart(total_per_day)<span style=color:#f92672>.</span>mark_trail()<span style=color:#f92672>.</span>encode(
+</code></pre></div><table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Date</strong></th>
+<th><strong>Total</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>130</strong></td>
+<td>2019-04-18</td>
+<td>47</td>
+</tr>
+<tr>
+<td><strong>409</strong></td>
+<td>2020-08-05</td>
+<td>53</td>
+</tr>
+<tr>
+<td><strong>195</strong></td>
+<td>2019-07-26</td>
+<td>66</td>
+</tr>
+<tr>
+<td><strong>329</strong></td>
+<td>2020-02-18</td>
+<td>139</td>
+</tr>
+<tr>
+<td><strong>337</strong></td>
+<td>2020-02-28</td>
+<td>53</td>
+</tr>
+</tbody>
+</table>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>alt<span style=color:#f92672>.</span>Chart(total_per_day)<span style=color:#f92672>.</span>mark_trail()<span style=color:#f92672>.</span>encode(
     x <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;Date:T&#34;</span>,
     y <span style=color:#f92672>=</span> <span style=color:#e6db74>&#39;Total&#39;</span>,
     size <span style=color:#f92672>=</span> <span style=color:#e6db74>&#39;Total:Q&#39;</span>
 )<span style=color:#f92672>.</span>properties(
     width <span style=color:#f92672>=</span> <span style=color:#ae81ff>600</span>
 )
-</code></pre></div><p><img loading=lazy src=/projects/call_analyzer_estimator/line_chart_total_calls_per_day.png alt="Total calls per day - chart"></p><p>We can see that there is a huge chunk of data missing in April and May. The missing data is due to the 2020 COVID confinement.</p><p>Also, the chart is overcrowded, nothing is really visible here. Let&rsquo;s remake it into a boxplot chart, to have more details.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>boxplot <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>groupby(<span style=color:#e6db74>&#34;Date&#34;</span>)[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>]<span style=color:#f92672>.</span>count()<span style=color:#f92672>.</span>reset_index()<span style=color:#f92672>.</span>rename({<span style=color:#e6db74>&#34;CommunicationType&#34;</span>: <span style=color:#e6db74>&#34;Total&#34;</span>}, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>)
+</code></pre></div><p><img loading=lazy src=/projects/call_analyzer_estimator/line_chart_total_calls_per_day.png alt="Total calls per day - chart">
+</p>
+<p>We can see that there is a huge chunk of data missing in April and May. The missing data is due to the 2020 COVID confinement.</p>
+<p>Also, the chart is overcrowded, nothing is really visible here. Let&rsquo;s remake it into a boxplot chart, to have more details.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>boxplot <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>groupby(<span style=color:#e6db74>&#34;Date&#34;</span>)[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>]<span style=color:#f92672>.</span>count()<span style=color:#f92672>.</span>reset_index()<span style=color:#f92672>.</span>rename({<span style=color:#e6db74>&#34;CommunicationType&#34;</span>: <span style=color:#e6db74>&#34;Total&#34;</span>}, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>)
 boxplot[<span style=color:#e6db74>&#34;Date&#34;</span>] <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>to_datetime(boxplot[<span style=color:#e6db74>&#34;Date&#34;</span>], format <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;%H:%M:%S&#34;</span>)
 boxplot[<span style=color:#e6db74>&#34;YearMonth&#34;</span>] <span style=color:#f92672>=</span> boxplot[<span style=color:#e6db74>&#39;Date&#39;</span>]<span style=color:#f92672>.</span>dt<span style=color:#f92672>.</span>to_period(<span style=color:#e6db74>&#39;M&#39;</span>)<span style=color:#f92672>.</span>dt<span style=color:#f92672>.</span>strftime(<span style=color:#e6db74>&#39;%Y-%m&#39;</span>)
 boxplot<span style=color:#f92672>.</span>sample(<span style=color:#ae81ff>5</span>)
-</code></pre></div><table><thead><tr><th></th><th><strong>Date</strong></th><th><strong>Total</strong></th><th><strong>YearMonth</strong></th></tr></thead><tbody><tr><td><strong>122</strong></td><td>2019-04-08</td><td>75</td><td>2019-04</td></tr><tr><td><strong>216</strong></td><td>2019-08-28</td><td>68</td><td>2019-08</td></tr><tr><td><strong>260</strong></td><td>2019-10-29</td><td>135</td><td>2019-10</td></tr><tr><td><strong>82</strong></td><td>2019-02-11</td><td>85</td><td>2019-02</td></tr><tr><td><strong>29</strong></td><td>2018-11-23</td><td>47</td><td>2018-11</td></tr></tbody></table><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>alt<span style=color:#f92672>.</span>Chart(boxplot)<span style=color:#f92672>.</span>mark_boxplot()<span style=color:#f92672>.</span>encode(
+</code></pre></div><table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Date</strong></th>
+<th><strong>Total</strong></th>
+<th><strong>YearMonth</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>122</strong></td>
+<td>2019-04-08</td>
+<td>75</td>
+<td>2019-04</td>
+</tr>
+<tr>
+<td><strong>216</strong></td>
+<td>2019-08-28</td>
+<td>68</td>
+<td>2019-08</td>
+</tr>
+<tr>
+<td><strong>260</strong></td>
+<td>2019-10-29</td>
+<td>135</td>
+<td>2019-10</td>
+</tr>
+<tr>
+<td><strong>82</strong></td>
+<td>2019-02-11</td>
+<td>85</td>
+<td>2019-02</td>
+</tr>
+<tr>
+<td><strong>29</strong></td>
+<td>2018-11-23</td>
+<td>47</td>
+<td>2018-11</td>
+</tr>
+</tbody>
+</table>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>alt<span style=color:#f92672>.</span>Chart(boxplot)<span style=color:#f92672>.</span>mark_boxplot()<span style=color:#f92672>.</span>encode(
     x<span style=color:#f92672>=</span><span style=color:#e6db74>&#39;YearMonth:O&#39;</span>,
     y<span style=color:#f92672>=</span><span style=color:#e6db74>&#39;Total:Q&#39;</span>
 )<span style=color:#f92672>.</span>properties(
     width<span style=color:#f92672>=</span><span style=color:#ae81ff>600</span>
 )
-</code></pre></div><p><img loading=lazy src=/projects/call_analyzer_estimator/bloxplot_chart_total_calls_per_day.png alt="Total calls per month - boxplot"></p><p>We can extract some info now:</p><ul><li>the average held between 60 to 100 in 2019, however the average ammount of calls increased in 2020.</li><li>there is considerable variation in min / max calls from month to month (probably due to season variations) and this will require more precise estimates on manpower.</li><li>there are outliers for max values, most likely indicating general incidents in the infrastructure that generate peak calls to the service. This should be adressed by an emergency service redirection.</li></ul><h2 id=total-calls-per-month---volume>Total calls per month - volume<a hidden class=anchor aria-hidden=true href=#total-calls-per-month---volume>#</a></h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>total_per_month <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>groupby(<span style=color:#e6db74>&#34;Date&#34;</span>)[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>]<span style=color:#f92672>.</span>count()<span style=color:#f92672>.</span>reset_index()<span style=color:#f92672>.</span>rename({<span style=color:#e6db74>&#34;CommunicationType&#34;</span>: <span style=color:#e6db74>&#34;Total&#34;</span>}, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>)
+</code></pre></div><p><img loading=lazy src=/projects/call_analyzer_estimator/bloxplot_chart_total_calls_per_day.png alt="Total calls per month - boxplot">
+</p>
+<p>We can extract some info now:</p>
+<ul>
+<li>the average held between 60 to 100 in 2019, however the average ammount of calls increased in 2020.</li>
+<li>there is considerable variation in min / max calls from month to month (probably due to season variations) and this will require more precise estimates on manpower.</li>
+<li>there are outliers for max values, most likely indicating general incidents in the infrastructure that generate peak calls to the service. This should be adressed by an emergency service redirection.</li>
+</ul>
+<h2 id=total-calls-per-month---volume>Total calls per month - volume<a hidden class=anchor aria-hidden=true href=#total-calls-per-month---volume>#</a></h2>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>total_per_month <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>groupby(<span style=color:#e6db74>&#34;Date&#34;</span>)[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>]<span style=color:#f92672>.</span>count()<span style=color:#f92672>.</span>reset_index()<span style=color:#f92672>.</span>rename({<span style=color:#e6db74>&#34;CommunicationType&#34;</span>: <span style=color:#e6db74>&#34;Total&#34;</span>}, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>)
 total_per_month<span style=color:#f92672>.</span>sample(<span style=color:#ae81ff>5</span>)
-</code></pre></div><table><thead><tr><th></th><th><strong>Date</strong></th><th><strong>Total</strong></th></tr></thead><tbody><tr><td><strong>130</strong></td><td>2019-04-18</td><td>47</td></tr><tr><td><strong>86</strong></td><td>2019-02-15</td><td>49</td></tr><tr><td><strong>262</strong></td><td>2019-10-31</td><td>131</td></tr><tr><td><strong>286</strong></td><td>2019-12-17</td><td>68</td></tr><tr><td><strong>302</strong></td><td>2020-01-10</td><td>3</td></tr></tbody></table><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>alt<span style=color:#f92672>.</span>Chart(total_per_month)<span style=color:#f92672>.</span>mark_bar()<span style=color:#f92672>.</span>encode(
+</code></pre></div><table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Date</strong></th>
+<th><strong>Total</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>130</strong></td>
+<td>2019-04-18</td>
+<td>47</td>
+</tr>
+<tr>
+<td><strong>86</strong></td>
+<td>2019-02-15</td>
+<td>49</td>
+</tr>
+<tr>
+<td><strong>262</strong></td>
+<td>2019-10-31</td>
+<td>131</td>
+</tr>
+<tr>
+<td><strong>286</strong></td>
+<td>2019-12-17</td>
+<td>68</td>
+</tr>
+<tr>
+<td><strong>302</strong></td>
+<td>2020-01-10</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>alt<span style=color:#f92672>.</span>Chart(total_per_month)<span style=color:#f92672>.</span>mark_bar()<span style=color:#f92672>.</span>encode(
     x <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;yearmonth(Date):O&#34;</span>,
     y <span style=color:#f92672>=</span> <span style=color:#e6db74>&#39;Total&#39;</span>,
     size <span style=color:#f92672>=</span> <span style=color:#e6db74>&#39;Total:Q&#39;</span>
 )<span style=color:#f92672>.</span>properties(
     width <span style=color:#f92672>=</span> <span style=color:#ae81ff>600</span>
 )
-</code></pre></div><p><img loading=lazy src=/projects/call_analyzer_estimator/chart_total_calls_per_month.png alt="Total calls per month - chart"></p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>total_heatmap <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>groupby(<span style=color:#e6db74>&#34;Date&#34;</span>)[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>]<span style=color:#f92672>.</span>count()<span style=color:#f92672>.</span>reset_index()<span style=color:#f92672>.</span>rename({<span style=color:#e6db74>&#34;CommunicationType&#34;</span>: <span style=color:#e6db74>&#34;Total&#34;</span>}, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>)
+</code></pre></div><p><img loading=lazy src=/projects/call_analyzer_estimator/chart_total_calls_per_month.png alt="Total calls per month - chart">
+</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>total_heatmap <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>groupby(<span style=color:#e6db74>&#34;Date&#34;</span>)[<span style=color:#e6db74>&#34;CommunicationType&#34;</span>]<span style=color:#f92672>.</span>count()<span style=color:#f92672>.</span>reset_index()<span style=color:#f92672>.</span>rename({<span style=color:#e6db74>&#34;CommunicationType&#34;</span>: <span style=color:#e6db74>&#34;Total&#34;</span>}, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>)
 heatmap_per_day <span style=color:#f92672>=</span> alt<span style=color:#f92672>.</span>Chart(total_heatmap)<span style=color:#f92672>.</span>mark_rect()<span style=color:#f92672>.</span>encode(
     x<span style=color:#f92672>=</span><span style=color:#e6db74>&#39;date(Date):O&#39;</span>,
     y<span style=color:#f92672>=</span><span style=color:#e6db74>&#39;yearmonth(Date):O&#39;</span>,
@@ -169,7 +723,9 @@ heatmap_per_day <span style=color:#f92672>=</span> alt<span style=color:#f92672>
     width<span style=color:#f92672>=</span><span style=color:#ae81ff>600</span>
     )
 heatmap_per_day
-</code></pre></div><p><img loading=lazy src=/projects/call_analyzer_estimator/chart_heatmap_calls_month_date.png alt="Total calls per month - heatmap chart"></p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>heatmap_per_day_of_week <span style=color:#f92672>=</span> alt<span style=color:#f92672>.</span>Chart(total_heatmap<span style=color:#f92672>.</span>rename({<span style=color:#e6db74>&#34;CommunicationType&#34;</span>: <span style=color:#e6db74>&#34;Total&#34;</span>}, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>))<span style=color:#f92672>.</span>mark_rect()<span style=color:#f92672>.</span>encode(
+</code></pre></div><p><img loading=lazy src=/projects/call_analyzer_estimator/chart_heatmap_calls_month_date.png alt="Total calls per month - heatmap chart">
+</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>heatmap_per_day_of_week <span style=color:#f92672>=</span> alt<span style=color:#f92672>.</span>Chart(total_heatmap<span style=color:#f92672>.</span>rename({<span style=color:#e6db74>&#34;CommunicationType&#34;</span>: <span style=color:#e6db74>&#34;Total&#34;</span>}, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>))<span style=color:#f92672>.</span>mark_rect()<span style=color:#f92672>.</span>encode(
     x<span style=color:#f92672>=</span><span style=color:#e6db74>&#39;day(Date):O&#39;</span>,
     y<span style=color:#f92672>=</span><span style=color:#e6db74>&#39;yearmonth(Date):O&#39;</span>,
     color<span style=color:#f92672>=</span> alt<span style=color:#f92672>.</span>Color(<span style=color:#e6db74>&#39;Total:Q&#39;</span>, scale<span style=color:#f92672>=</span>alt<span style=color:#f92672>.</span>Scale(scheme<span style=color:#f92672>=</span><span style=color:#e6db74>&#39;goldred&#39;</span>))
@@ -177,7 +733,39 @@ heatmap_per_day
     width<span style=color:#f92672>=</span><span style=color:#ae81ff>600</span>
     )
 heatmap_per_day_of_week
-</code></pre></div><p><img loading=lazy src=/projects/call_analyzer_estimator/chart_heatmap_calls_month_day_week.png alt="Total calls per month and day of week - heatmap chart"></p><h1 id=estimator>Estimator<a hidden class=anchor aria-hidden=true href=#estimator>#</a></h1><p>Given a level of service, what is the minimum required ammount of agents to fulfill the service in question?</p><p>We&rsquo;ll check this by constructing time intervals from calls start and end time and we&rsquo;ll check at a certain frequency how many time intervals overlap. Since only one person can respond to a call, the total number of overlaps is the number of required agents.</p><p>Let&rsquo;s look at a simple example:</p><p><img loading=lazy src=/projects/call_analyzer_estimator/call_analyzer_estimator_call_diagram.png alt="Call diagram"></p><p>In the interval 8h00 - 8h30, we received 2 calls that were answered and we missed one call. In order to properly estimate the time occupation, we&rsquo;ll add 5min (the average conversation time) to missed calls. So, for this interval, we needed 3 agents to answer. In the next interval, 8h30 - 9h00, we still have 2 agents on call (Call1 and Call2), we assume that there is another fictive agent on missed Call3 and we receive another call that we missed. In total, for this interval, we would need 4 agents. In total, we can see that we need:</p><table><thead><tr><th>Interval</th><th>Agents needed</th></tr></thead><tbody><tr><td>8h00 - 8h30</td><td>3</td></tr><tr><td>8h30 - 9h00</td><td>4</td></tr><tr><td>9h00 - 9h30</td><td>2</td></tr></tbody></table><p>The time interval to check for call status will be smaller (5 min) in order to be more precise in our results.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;call_start_dt&#34;</span>] <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;DateTime&#34;</span>]
+</code></pre></div><p><img loading=lazy src=/projects/call_analyzer_estimator/chart_heatmap_calls_month_day_week.png alt="Total calls per month and day of week - heatmap chart">
+</p>
+<h1 id=estimator>Estimator<a hidden class=anchor aria-hidden=true href=#estimator>#</a></h1>
+<p>Given a level of service, what is the minimum required ammount of agents to fulfill the service in question?</p>
+<p>We&rsquo;ll check this by constructing time intervals from calls start and end time and we&rsquo;ll check at a certain frequency how many time intervals overlap. Since only one person can respond to a call, the total number of overlaps is the number of required agents.</p>
+<p>Let&rsquo;s look at a simple example:</p>
+<p><img loading=lazy src=/projects/call_analyzer_estimator/call_analyzer_estimator_call_diagram.png alt="Call diagram">
+</p>
+<p>In the interval 8h00 - 8h30, we received 2 calls that were answered and we missed one call. In order to properly estimate the time occupation, we&rsquo;ll add 5min (the average conversation time) to missed calls. So, for this interval, we needed 3 agents to answer. In the next interval, 8h30 - 9h00, we still have 2 agents on call (Call1 and Call2), we assume that there is another fictive agent on missed Call3 and we receive another call that we missed. In total, for this interval, we would need 4 agents. In total, we can see that we need:</p>
+<table>
+<thead>
+<tr>
+<th>Interval</th>
+<th>Agents needed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8h00 - 8h30</td>
+<td>3</td>
+</tr>
+<tr>
+<td>8h30 - 9h00</td>
+<td>4</td>
+</tr>
+<tr>
+<td>9h00 - 9h30</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>The time interval to check for call status will be smaller (5 min) in order to be more precise in our results.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df[<span style=color:#e6db74>&#34;call_start_dt&#34;</span>] <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;DateTime&#34;</span>]
 
 df[<span style=color:#e6db74>&#34;call_end_dt&#34;</span>] <span style=color:#f92672>=</span> np<span style=color:#f92672>.</span>nan
 df<span style=color:#f92672>.</span>loc[df[<span style=color:#e6db74>&#34;Answered&#34;</span>] <span style=color:#f92672>==</span> <span style=color:#ae81ff>1</span>, <span style=color:#e6db74>&#34;call_end_dt&#34;</span>] <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;DateTime&#34;</span>] <span style=color:#f92672>+</span> df[<span style=color:#e6db74>&#34;CallDuration&#34;</span>]
@@ -186,23 +774,70 @@ average_call_time <span style=color:#f92672>=</span> df<span style=color:#f92672
 average_call_time <span style=color:#f92672>=</span> average_call_time<span style=color:#f92672>.</span>floor(<span style=color:#e6db74>&#34;s&#34;</span>)
 average_call_time
 </code></pre></div><pre><code>Timedelta('0 days 00:05:11')
-</code></pre><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df<span style=color:#f92672>.</span>loc[df[<span style=color:#e6db74>&#34;Answered&#34;</span>] <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span>, <span style=color:#e6db74>&#34;call_end_dt&#34;</span>] <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;DateTime&#34;</span>] <span style=color:#f92672>+</span> pd<span style=color:#f92672>.</span>to_timedelta(average_call_time, unit <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;S&#34;</span>)
+</code></pre>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>df<span style=color:#f92672>.</span>loc[df[<span style=color:#e6db74>&#34;Answered&#34;</span>] <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span>, <span style=color:#e6db74>&#34;call_end_dt&#34;</span>] <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;DateTime&#34;</span>] <span style=color:#f92672>+</span> pd<span style=color:#f92672>.</span>to_timedelta(average_call_time, unit <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;S&#34;</span>)
 df<span style=color:#f92672>.</span>loc[:,(<span style=color:#e6db74>&#34;DateTime&#34;</span>, <span style=color:#e6db74>&#34;CallDuration&#34;</span>, <span style=color:#e6db74>&#34;call_start_dt&#34;</span>, <span style=color:#e6db74>&#34;call_end_dt&#34;</span>)]<span style=color:#f92672>.</span>sample(<span style=color:#ae81ff>5</span>)
-</code></pre></div><pre><code>.dataframe tbody tr th {
+</code></pre></div>
+<pre><code>.dataframe tbody tr th {
     vertical-align: top;
 }
 
 .dataframe thead th {
     text-align: right;
 }
-</code></pre><p></p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>create_interval</span>(df):
+</code></pre>
+<p></p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>create_interval</span>(df):
     df[<span style=color:#e6db74>&#34;Time_interval&#34;</span>] <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>Interval(df[<span style=color:#e6db74>&#34;call_start_dt&#34;</span>], df[<span style=color:#e6db74>&#34;call_end_dt&#34;</span>])
     <span style=color:#66d9ef>return</span> df
 
 df[<span style=color:#e6db74>&#34;Time_interval&#34;</span>] <span style=color:#f92672>=</span> np<span style=color:#f92672>.</span>nan
 df <span style=color:#f92672>=</span> df<span style=color:#f92672>.</span>apply(create_interval, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>)
 df<span style=color:#f92672>.</span>loc[:(<span style=color:#e6db74>&#34;call_start_dt&#34;</span>, <span style=color:#e6db74>&#34;call_end_dt&#34;</span>, <span style=color:#e6db74>&#34;Time_interval&#34;</span>)]<span style=color:#f92672>.</span>head()
-</code></pre></div><table><thead><tr><th></th><th><strong>call_start_dt</strong></th><th><strong>call_end_dt</strong></th><th><strong>Time_interval</strong></th></tr></thead><tbody><tr><td><strong>0</strong></td><td>2019-12-20 14:03:00</td><td>2019-12-20 14:12:43</td><td>(2019-12-20 14:03:00, 2019-12-20 14:12:43]</td></tr><tr><td><strong>3</strong></td><td>2019-12-20 14:27:00</td><td>2019-12-20 14:29:14</td><td>(2019-12-20 14:27:00, 2019-12-20 14:29:14]</td></tr><tr><td><strong>4</strong></td><td>2019-12-20 14:28:00</td><td>2019-12-20 14:30:07</td><td>(2019-12-20 14:28:00, 2019-12-20 14:30:07]</td></tr><tr><td><strong>6</strong></td><td>2019-12-20 14:35:00</td><td>2019-12-20 14:36:10</td><td>(2019-12-20 14:35:00, 2019-12-20 14:36:10]</td></tr><tr><td><strong>10</strong></td><td>2019-12-20 14:40:00</td><td>2019-12-20 14:41:45</td><td>(2019-12-20 14:40:00, 2019-12-20 14:41:45]</td></tr></tbody></table><p>Constructing time intervals between date A and date B, each day with opening hour X and closing hour Y is &mldr; tricky :(</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>unique_date_list <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;Date&#34;</span>]<span style=color:#f92672>.</span>unique()
+</code></pre></div><table>
+<thead>
+<tr>
+<th></th>
+<th><strong>call_start_dt</strong></th>
+<th><strong>call_end_dt</strong></th>
+<th><strong>Time_interval</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>0</strong></td>
+<td>2019-12-20 14:03:00</td>
+<td>2019-12-20 14:12:43</td>
+<td>(2019-12-20 14:03:00, 2019-12-20 14:12:43]</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td>2019-12-20 14:27:00</td>
+<td>2019-12-20 14:29:14</td>
+<td>(2019-12-20 14:27:00, 2019-12-20 14:29:14]</td>
+</tr>
+<tr>
+<td><strong>4</strong></td>
+<td>2019-12-20 14:28:00</td>
+<td>2019-12-20 14:30:07</td>
+<td>(2019-12-20 14:28:00, 2019-12-20 14:30:07]</td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td>2019-12-20 14:35:00</td>
+<td>2019-12-20 14:36:10</td>
+<td>(2019-12-20 14:35:00, 2019-12-20 14:36:10]</td>
+</tr>
+<tr>
+<td><strong>10</strong></td>
+<td>2019-12-20 14:40:00</td>
+<td>2019-12-20 14:41:45</td>
+<td>(2019-12-20 14:40:00, 2019-12-20 14:41:45]</td>
+</tr>
+</tbody>
+</table>
+<p>Constructing time intervals between date A and date B, each day with opening hour X and closing hour Y is &mldr; tricky :(</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>unique_date_list <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;Date&#34;</span>]<span style=color:#f92672>.</span>unique()
 date_range_start <span style=color:#f92672>=</span> []
 date_range_end <span style=color:#f92672>=</span> []
 frequency <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>Timedelta(<span style=color:#e6db74>&#34;5 minutes&#34;</span>)
@@ -225,7 +860,8 @@ verification_range
 </code></pre></div><pre><code>IntervalIndex([(2019-12-20 07:30:00, 2019-12-20 07:35:00], (2019-12-20 07:35:00, 2019-12-20 07:40:00], (2019-12-20 07:40:00, 2019-12-20 07:45:00], (2019-12-20 07:45:00, 2019-12-20 07:50:00], (2019-12-20 07:50:00, 2019-12-20 07:55:00] ... (2020-10-01 18:05:00, 2020-10-01 18:10:00], (2020-10-01 18:10:00, 2020-10-01 18:15:00], (2020-10-01 18:15:00, 2020-10-01 18:20:00], (2020-10-01 18:20:00, 2020-10-01 18:25:00], (2020-10-01 18:25:00, 2020-10-01 18:30:00]],
               closed='right',
               dtype='interval[datetime64[ns]]')
-</code></pre><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>result <span style=color:#f92672>=</span> []
+</code></pre>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>result <span style=color:#f92672>=</span> []
 <span style=color:#66d9ef>for</span> verification_interval <span style=color:#f92672>in</span> verification_range:
     counter <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>
     
@@ -240,15 +876,137 @@ verification_range
             counter <span style=color:#f92672>+=</span> <span style=color:#ae81ff>1</span>      
     result<span style=color:#f92672>.</span>append({<span style=color:#e6db74>&#34;time_interval&#34;</span>: verification_interval,
                   <span style=color:#e6db74>&#34;total_overlaps&#34;</span>: counter})
-</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>estimator <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>DataFrame(result)
+</code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>estimator <span style=color:#f92672>=</span> pd<span style=color:#f92672>.</span>DataFrame(result)
 estimator<span style=color:#f92672>.</span>sample(<span style=color:#ae81ff>5</span>)
-</code></pre></div><table><thead><tr><th></th><th><strong>time_interval</strong></th><th><strong>total_overlaps</strong></th></tr></thead><tbody><tr><td><strong>13575</strong></td><td>(2019-01-09 16:45:00, 2019-01-09 16:50:00]</td><td>2</td></tr><tr><td><strong>58858</strong></td><td>(2020-09-24 17:20:00, 2020-09-24 17:25:00]</td><td>1</td></tr><tr><td><strong>28128</strong></td><td>(2019-06-21 08:30:00, 2019-06-21 08:35:00]</td><td>1</td></tr><tr><td><strong>52824</strong></td><td>(2020-07-23 09:30:00, 2020-07-23 09:35:00]</td><td>1</td></tr><tr><td><strong>24577</strong></td><td>(2019-05-10 09:35:00, 2019-05-10 09:40:00]</td><td>3</td></tr></tbody></table><p>We got our results, but we&rsquo;ll only keep the starting date of the interval, it&rsquo;s much easier to construct graphs with simple dates than time intervals.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>estimator[<span style=color:#e6db74>&#34;DateTime&#34;</span>] <span style=color:#f92672>=</span> estimator[<span style=color:#e6db74>&#34;time_interval&#34;</span>]<span style=color:#f92672>.</span>apply(<span style=color:#66d9ef>lambda</span> x: x<span style=color:#f92672>.</span>left)
+</code></pre></div><table>
+<thead>
+<tr>
+<th></th>
+<th><strong>time_interval</strong></th>
+<th><strong>total_overlaps</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>13575</strong></td>
+<td>(2019-01-09 16:45:00, 2019-01-09 16:50:00]</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>58858</strong></td>
+<td>(2020-09-24 17:20:00, 2020-09-24 17:25:00]</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>28128</strong></td>
+<td>(2019-06-21 08:30:00, 2019-06-21 08:35:00]</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>52824</strong></td>
+<td>(2020-07-23 09:30:00, 2020-07-23 09:35:00]</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>24577</strong></td>
+<td>(2019-05-10 09:35:00, 2019-05-10 09:40:00]</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+<p>We got our results, but we&rsquo;ll only keep the starting date of the interval, it&rsquo;s much easier to construct graphs with simple dates than time intervals.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>estimator[<span style=color:#e6db74>&#34;DateTime&#34;</span>] <span style=color:#f92672>=</span> estimator[<span style=color:#e6db74>&#34;time_interval&#34;</span>]<span style=color:#f92672>.</span>apply(<span style=color:#66d9ef>lambda</span> x: x<span style=color:#f92672>.</span>left)
 estimator <span style=color:#f92672>=</span> estimator<span style=color:#f92672>.</span>loc[:,(<span style=color:#e6db74>&#34;total_overlaps&#34;</span>,<span style=color:#e6db74>&#34;DateTime&#34;</span>)]<span style=color:#f92672>.</span>rename({<span style=color:#e6db74>&#34;total_overlaps&#34;</span>: <span style=color:#e6db74>&#34;Total&#34;</span>}, axis <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>)
-</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>estimator<span style=color:#f92672>.</span>sample(<span style=color:#ae81ff>5</span>)
-</code></pre></div><table><thead><tr><th></th><th><strong>Total</strong></th><th><strong>DateTime</strong></th></tr></thead><tbody><tr><td><strong>34381</strong></td><td>1</td><td>2019-09-04 12:35:00</td></tr><tr><td><strong>46296</strong></td><td>2</td><td>2020-05-11 15:30:00</td></tr><tr><td><strong>33707</strong></td><td>2</td><td>2019-08-28 11:25:00</td></tr><tr><td><strong>38821</strong></td><td>3</td><td>2019-10-22 08:35:00</td></tr><tr><td><strong>38847</strong></td><td>1</td><td>2019-10-22 10:45:00</td></tr></tbody></table><h1 id=average--min--max-nb-of-agents-required-per-hour-per-day>Average / Min / Max nb of agents required per hour per day<a hidden class=anchor aria-hidden=true href=#average--min--max-nb-of-agents-required-per-hour-per-day>#</a></h1><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>estimator[<span style=color:#e6db74>&#34;Hour&#34;</span>] <span style=color:#f92672>=</span> estimator[<span style=color:#e6db74>&#34;DateTime&#34;</span>]<span style=color:#f92672>.</span>dt<span style=color:#f92672>.</span>hour
+</code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>estimator<span style=color:#f92672>.</span>sample(<span style=color:#ae81ff>5</span>)
+</code></pre></div><table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Total</strong></th>
+<th><strong>DateTime</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>34381</strong></td>
+<td>1</td>
+<td>2019-09-04 12:35:00</td>
+</tr>
+<tr>
+<td><strong>46296</strong></td>
+<td>2</td>
+<td>2020-05-11 15:30:00</td>
+</tr>
+<tr>
+<td><strong>33707</strong></td>
+<td>2</td>
+<td>2019-08-28 11:25:00</td>
+</tr>
+<tr>
+<td><strong>38821</strong></td>
+<td>3</td>
+<td>2019-10-22 08:35:00</td>
+</tr>
+<tr>
+<td><strong>38847</strong></td>
+<td>1</td>
+<td>2019-10-22 10:45:00</td>
+</tr>
+</tbody>
+</table>
+<h1 id=average--min--max-nb-of-agents-required-per-hour-per-day>Average / Min / Max nb of agents required per hour per day<a hidden class=anchor aria-hidden=true href=#average--min--max-nb-of-agents-required-per-hour-per-day>#</a></h1>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>estimator[<span style=color:#e6db74>&#34;Hour&#34;</span>] <span style=color:#f92672>=</span> estimator[<span style=color:#e6db74>&#34;DateTime&#34;</span>]<span style=color:#f92672>.</span>dt<span style=color:#f92672>.</span>hour
 estimator[<span style=color:#e6db74>&#34;Day_nb&#34;</span>] <span style=color:#f92672>=</span> estimator[<span style=color:#e6db74>&#34;DateTime&#34;</span>]<span style=color:#f92672>.</span>dt<span style=color:#f92672>.</span>day
 estimator<span style=color:#f92672>.</span>sample(<span style=color:#ae81ff>5</span>)
-</code></pre></div><table><thead><tr><th></th><th><strong>Total</strong></th><th><strong>DateTime</strong></th><th><strong>Hour</strong></th><th><strong>Day_nb</strong></th></tr></thead><tbody><tr><td><strong>16620</strong></td><td>0</td><td>2019-02-11 17:30:00</td><td>17</td><td>11</td></tr><tr><td><strong>35779</strong></td><td>0</td><td>2019-09-19 08:05:00</td><td>8</td><td>19</td></tr><tr><td><strong>41340</strong></td><td>6</td><td>2020-01-27 09:30:00</td><td>9</td><td>27</td></tr><tr><td><strong>14365</strong></td><td>1</td><td>2019-01-17 16:35:00</td><td>16</td><td>17</td></tr><tr><td><strong>18406</strong></td><td>1</td><td>2019-03-01 12:20:00</td><td>12</td><td>1</td></tr></tbody></table><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>calc_agg</span>(df):
+</code></pre></div><table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Total</strong></th>
+<th><strong>DateTime</strong></th>
+<th><strong>Hour</strong></th>
+<th><strong>Day_nb</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>16620</strong></td>
+<td>0</td>
+<td>2019-02-11 17:30:00</td>
+<td>17</td>
+<td>11</td>
+</tr>
+<tr>
+<td><strong>35779</strong></td>
+<td>0</td>
+<td>2019-09-19 08:05:00</td>
+<td>8</td>
+<td>19</td>
+</tr>
+<tr>
+<td><strong>41340</strong></td>
+<td>6</td>
+<td>2020-01-27 09:30:00</td>
+<td>9</td>
+<td>27</td>
+</tr>
+<tr>
+<td><strong>14365</strong></td>
+<td>1</td>
+<td>2019-01-17 16:35:00</td>
+<td>16</td>
+<td>17</td>
+</tr>
+<tr>
+<td><strong>18406</strong></td>
+<td>1</td>
+<td>2019-03-01 12:20:00</td>
+<td>12</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>calc_agg</span>(df):
     df[<span style=color:#e6db74>&#34;Total_mean&#34;</span>] <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;Total&#34;</span>]<span style=color:#f92672>.</span>mean()
     df[<span style=color:#e6db74>&#34;Total_mean&#34;</span>] <span style=color:#f92672>=</span> np<span style=color:#f92672>.</span>ceil(df[<span style=color:#e6db74>&#34;Total_mean&#34;</span>])
     df[<span style=color:#e6db74>&#34;Total_min&#34;</span>] <span style=color:#f92672>=</span> df[<span style=color:#e6db74>&#34;Total&#34;</span>]<span style=color:#f92672>.</span>min()
@@ -256,9 +1014,75 @@ estimator<span style=color:#f92672>.</span>sample(<span style=color:#ae81ff>5</s
     
     <span style=color:#66d9ef>return</span> df
 
-heatmap_table <span style=color:#f92672>=</span> estimator<span style=color:#f92672>.</span>groupby([<span style=color:#e6db74>&#34;Day_nb&#34;</span>, <span style=color:#e6db74>&#34;Hour&#34;</span>])<span style=color:#f92672>.</span>apply(calc_agg)<span style=color:#f92672>.</span>reset_index(drop <span style=color:#f92672>=</span> True)
+heatmap_table <span style=color:#f92672>=</span> estimator<span style=color:#f92672>.</span>groupby([<span style=color:#e6db74>&#34;Day_nb&#34;</span>, <span style=color:#e6db74>&#34;Hour&#34;</span>])<span style=color:#f92672>.</span>apply(calc_agg)<span style=color:#f92672>.</span>reset_index(drop <span style=color:#f92672>=</span> <span style=color:#66d9ef>True</span>)
 heatmap_table
-</code></pre></div><table><thead><tr><th></th><th><strong>Total</strong></th><th><strong>DateTime</strong></th><th><strong>Hour</strong></th><th><strong>Day_nb</strong></th><th><strong>Total_mean</strong></th><th><strong>Total_min</strong></th><th><strong>Total_max</strong></th></tr></thead><tbody><tr><td><strong>639</strong></td><td>0</td><td>2019-12-27 16:45:00</td><td>16</td><td>27</td><td>2.0</td><td>0</td><td>5</td></tr><tr><td><strong>33497</strong></td><td>1</td><td>2019-08-26 15:55:00</td><td>15</td><td>26</td><td>2.0</td><td>0</td><td>10</td></tr><tr><td><strong>46958</strong></td><td>0</td><td>2020-05-18 15:40:00</td><td>15</td><td>18</td><td>2.0</td><td>0</td><td>6</td></tr><tr><td><strong>43107</strong></td><td>1</td><td>2020-02-13 13:45:00</td><td>13</td><td>13</td><td>1.0</td><td>0</td><td>7</td></tr><tr><td><strong>56781</strong></td><td>3</td><td>2020-09-03 09:15:00</td><td>9</td><td>3</td><td>3.0</td><td>0</td><td>9</td></tr></tbody></table><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>alt<span style=color:#f92672>.</span>data_transformers<span style=color:#f92672>.</span>disable_max_rows()
+</code></pre></div><table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Total</strong></th>
+<th><strong>DateTime</strong></th>
+<th><strong>Hour</strong></th>
+<th><strong>Day_nb</strong></th>
+<th><strong>Total_mean</strong></th>
+<th><strong>Total_min</strong></th>
+<th><strong>Total_max</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>639</strong></td>
+<td>0</td>
+<td>2019-12-27 16:45:00</td>
+<td>16</td>
+<td>27</td>
+<td>2.0</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr>
+<td><strong>33497</strong></td>
+<td>1</td>
+<td>2019-08-26 15:55:00</td>
+<td>15</td>
+<td>26</td>
+<td>2.0</td>
+<td>0</td>
+<td>10</td>
+</tr>
+<tr>
+<td><strong>46958</strong></td>
+<td>0</td>
+<td>2020-05-18 15:40:00</td>
+<td>15</td>
+<td>18</td>
+<td>2.0</td>
+<td>0</td>
+<td>6</td>
+</tr>
+<tr>
+<td><strong>43107</strong></td>
+<td>1</td>
+<td>2020-02-13 13:45:00</td>
+<td>13</td>
+<td>13</td>
+<td>1.0</td>
+<td>0</td>
+<td>7</td>
+</tr>
+<tr>
+<td><strong>56781</strong></td>
+<td>3</td>
+<td>2020-09-03 09:15:00</td>
+<td>9</td>
+<td>3</td>
+<td>3.0</td>
+<td>0</td>
+<td>9</td>
+</tr>
+</tbody>
+</table>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python>alt<span style=color:#f92672>.</span>data_transformers<span style=color:#f92672>.</span>disable_max_rows()
 
 base <span style=color:#f92672>=</span> alt<span style=color:#f92672>.</span>Chart(heatmap_table)<span style=color:#f92672>.</span>encode(
     x<span style=color:#f92672>=</span><span style=color:#e6db74>&#39;Hour:O&#39;</span>,
@@ -275,11 +1099,46 @@ text_avg <span style=color:#f92672>=</span> base<span style=color:#f92672>.</spa
 
 heatmap <span style=color:#f92672>=</span> color_avg <span style=color:#f92672>+</span> text_avg
 heatmap
-</code></pre></div><p><img loading=lazy src=/projects/call_analyzer_estimator/avg_agents_per_day_heatmap.png alt="Agents need"></p></div><footer class=post-footer><ul class=post-tags><li><a href=https://sorinbiriescu.github.io/en/tags/python/>Python</a></li><li><a href=https://sorinbiriescu.github.io/en/tags/data-wrangling/>Data wrangling</a></li><li><a href=https://sorinbiriescu.github.io/en/tags/data-analysis/>Data analysis</a></li><li><a href=https://sorinbiriescu.github.io/en/tags/data-visualisation/>Data visualisation</a></li><li><a href=https://sorinbiriescu.github.io/en/tags/pandas/>Pandas</a></li><li><a href=https://sorinbiriescu.github.io/en/tags/altair/>Altair</a></li><li><a href=https://sorinbiriescu.github.io/en/tags/time-series/>Time series</a></li></ul><nav class=paginav><a class=prev href=https://sorinbiriescu.github.io/en/projects/apollo/><span class=title>« Prev Page</span><br><span>Apollo</span></a>
-<a class=next href=https://sorinbiriescu.github.io/en/projects/sql_queries/><span class=title>Next Page »</span><br><span>Sales performance at Chinook (Data Analysis with SQL queries)</span></a></nav></footer></article></main><footer class=footer><span>&copy; 2021 <a href=https://sorinbiriescu.github.io/en/>Sorin BIRIESCU</a></span>
-<span>Powered by
+</code></pre></div><p><img loading=lazy src=/projects/call_analyzer_estimator/avg_agents_per_day_heatmap.png alt="Agents need">
+</p>
+</div>
+<footer class=post-footer>
+<ul class=post-tags>
+<li><a href=https://sorinbiriescu.github.io/en/tags/python/>Python</a></li>
+<li><a href=https://sorinbiriescu.github.io/en/tags/data-wrangling/>Data wrangling</a></li>
+<li><a href=https://sorinbiriescu.github.io/en/tags/data-analysis/>Data analysis</a></li>
+<li><a href=https://sorinbiriescu.github.io/en/tags/data-visualisation/>Data visualisation</a></li>
+<li><a href=https://sorinbiriescu.github.io/en/tags/pandas/>Pandas</a></li>
+<li><a href=https://sorinbiriescu.github.io/en/tags/altair/>Altair</a></li>
+<li><a href=https://sorinbiriescu.github.io/en/tags/time-series/>Time series</a></li>
+</ul>
+<nav class=paginav>
+<a class=prev href=https://sorinbiriescu.github.io/en/projects/apollo/>
+<span class=title>« Prev Page</span>
+<br>
+<span>Apollo</span>
+</a>
+<a class=next href=https://sorinbiriescu.github.io/en/projects/sql_queries/>
+<span class=title>Next Page »</span>
+<br>
+<span>Sales performance at Chinook (Data Analysis with SQL queries)</span>
+</a>
+</nav>
+</footer>
+</article>
+</main>
+<footer class=footer>
+<span>&copy; 2021 <a href=https://sorinbiriescu.github.io/en/>Sorin BIRIESCU</a></span>
+<span>
+Powered by
 <a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://git.io/hugopapermod rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg></a><script>let menu=document.getElementById('menu')
-menu.scrollLeft=localStorage.getItem("menu-scroll-position");menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft);}
-document.querySelectorAll('a[href^="#"]').forEach(anchor=>{anchor.addEventListener("click",function(e){e.preventDefault();var id=this.getAttribute("href").substr(1);if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({behavior:"smooth"});}else{document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();}
-if(id==="top"){history.replaceState(null,null," ");}else{history.pushState(null,null,`#${id}`);}});});</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){if(document.body.scrollTop>800||document.documentElement.scrollTop>800){mybutton.style.visibility="visible";mybutton.style.opacity="1";}else{mybutton.style.visibility="hidden";mybutton.style.opacity="0";}};</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{if(document.body.className.includes("dark")){document.body.classList.remove('dark');localStorage.setItem("pref-theme",'light');}else{document.body.classList.add('dark');localStorage.setItem("pref-theme",'dark');}})</script></body></html>
+        <a href=https://git.io/hugopapermod rel=noopener target=_blank>PaperMod</a>
+</span>
+</footer>
+<a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a>
+<script>let menu=document.getElementById('menu');menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)},document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener("click",function(b){b.preventDefault();var a=this.getAttribute("href").substr(1);window.matchMedia('(prefers-reduced-motion: reduce)').matches?document.querySelector(`[id='${decodeURIComponent(a)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(a)}']`).scrollIntoView({behavior:"smooth"}),a==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${a}`)})})</script>
+<script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script>
+<script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove('dark'),localStorage.setItem("pref-theme",'light')):(document.body.classList.add('dark'),localStorage.setItem("pref-theme",'dark'))})</script>
+</body>
+</html>

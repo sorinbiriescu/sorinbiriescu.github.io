@@ -1,15 +1,316 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Sales performance at Chinook (Data Analysis with SQL queries) | Sorin BIRIESCU</title><meta name=keywords content="SQL"><meta name=description content="Data analysis (sales performance) done with SQL on a fictious company"><meta name=author content><link rel=canonical href=https://sorinbiriescu.github.io/en/projects/sql_queries/><meta name=google-site-verification content="XYZabc"><link crossorigin=anonymous href=/assets/css/stylesheet.min.61dfb3f0b4cda95d2ccb867f9a3b244ce5d23e12492bcc3c277df594c7bc1adf.css integrity="sha256-Yd+z8LTNqV0sy4Z/mjskTOXSPhJJK8w8J331lMe8Gt8=" rel="preload stylesheet" as=style><script defer crossorigin=anonymous src=/assets/js/highlight.min.27cd435cc9ed6abb4b496581b151804f79f366c412620272bb94e2f5f598ebcc.js integrity="sha256-J81DXMntartLSWWBsVGAT3nzZsQSYgJyu5Ti9fWY68w=" onload=hljs.initHighlightingOnLoad();></script><link rel=icon href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E><link rel=icon type=image/png sizes=16x16 href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E><link rel=icon type=image/png sizes=32x32 href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E><link rel=apple-touch-icon href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E><link rel=mask-icon href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><meta name=generator content="Hugo 0.80.0"><link rel=alternate hreflang=en href=https://sorinbiriescu.github.io/en/projects/sql_queries/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><script type=application/javascript>var doNotTrack=false;if(!doNotTrack){(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');ga('create','UA-123-45','auto');ga('send','pageview');}</script><meta property="og:title" content="Sales performance at Chinook (Data Analysis with SQL queries)"><meta property="og:description" content="Data analysis (sales performance) done with SQL on a fictious company"><meta property="og:type" content="article"><meta property="og:url" content="https://sorinbiriescu.github.io/en/projects/sql_queries/"><meta property="og:image" content="https://sorinbiriescu.github.io/projects/sales_performance_chinook/cover_chinook_sql.png"><meta property="article:section" content="projects"><meta property="og:site_name" content="Sorin BIRIESCU"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://sorinbiriescu.github.io/projects/sales_performance_chinook/cover_chinook_sql.png"><meta name=twitter:title content="Sales performance at Chinook (Data Analysis with SQL queries)"><meta name=twitter:description content="Data analysis (sales performance) done with SQL on a fictious company"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":4,"name":"Sales performance at Chinook (Data Analysis with SQL queries)","item":"https://sorinbiriescu.github.io/en/projects/sql_queries/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Sales performance at Chinook (Data Analysis with SQL queries)","name":"Sales performance at Chinook (Data Analysis with SQL queries)","description":"Data analysis (sales performance) done with SQL on a fictious company","keywords":["SQL"],"articleBody":"This is a showcase of SQL queries run on a fictious database for a record selling company called Chinook Records.\nI choose a SQLite 3 database as:\n it’s really simple to run on a simple computer, not needing to install a full solution such as MySQL, PostgreSQL etc. although there are certain functionalities not available on SQLlite, most of the SQL queries can be run on other variants  The example database was downloaded from the website SQLite Sample Database and below is the diagram of the DB.\nThe database is fairly simple:\n we have songs (tracks) that we sell to customers songs / tracks belong to an album, an artist and a genre and they have a specific type (ex: MP3, AAC etc.) customers buy tracks and we invoice them one invoice will have one or several lines corresponding to the number of tracks that we sold to that customer.  We’ll query the DB to get some insights into this company. Note that most of the queries are short, they’re only meant to go through certain operations:\n SELECT statement LIMIT results Filter, Group and order results Subqueries JOINS String formatting Date operations CTE  Examples of artists and albums Let’s see first what we’re selling and to whom we are selling to.\nSELECT * FROM artists LIMIT 10    ArtistId Name     1 AC/DC   2 Accept   3 Aerosmith   4 Alanis Morissette   5 Alice In Chains   6 Antônio Carlos Jobim   7 Apocalyptica   8 Audioslave   9 BackBeat   10 Billy Cobham    Some of our customers\nSELECT FirstName, LastName, Country FROM customers LIMIT 10    FirstName LastName Country     Luís Gonçalves Brazil   Leonie Köhler Germany   François Tremblay Canada   Bjørn Hansen Norway   František Wichterlová Czech Republic   Helena Holý Czech Republic   Astrid Gruber Austria   Daan Peeters Belgium   Kara Nielsen Denmark   Eduardo Martins Brazil    How about only the customers in Brazil?\nSELECT FirstName, LastName, Country FROM customers WHERE Country = \"Brazil\" LIMIT 10    FirstName LastName Country     Luís Gonçalves Brazil   Eduardo Martins Brazil   Alexandre Rocha Brazil   Roberto Almeida Brazil   Fernanda Ramos Brazil    Top bands with the most number of albums SELECT Name, total_albums FROM artists LEFT JOIN ( SELECT ArtistId, count(ArtistId) AS total_albums FROM albums GROUP BY ArtistId ) AS total_albums ON artists.ArtistId = total_albums.ArtistId ORDER BY total_albums DESC LIMIT 10    Name total_albums     Iron Maiden 21   Led Zeppelin 14   Deep Purple 11   Metallica 10   U2 10   Ozzy Osbourne 6   Pearl Jam 5   Various Artists 4   Faith No More 4   Foo Fighters 4    Top spenders Let’s get a list of our top spenders.\nSELECT Sum(I.Total) as Total_purchased, C.FirstName, UPPER(C.LastName) FROM invoices I, customers C WHERE I.CustomerId = C.CustomerId GROUP BY C.LastName ORDER BY Total_purchased DESC LIMIT 10    Total_purchased FirstName UPPER(C.LastName)     49.62 Helena HOLý   47.62 Richard CUNNINGHAM   46.62 Luis ROJAS   45.62 Hugh O’REILLY   45.62 Ladislav KOVáCS   43.62 Julia BARNETT   43.62 Fynn ZIMMERMANN   43.62 Frank RALSTON   42.62 Victor STEVENS   42.62 Astrid GRUBER    Top sales by month SELECT strftime('%Y-%m', InvoiceDate) as YearMonth, SUM(Total) FROM invoices GROUP BY YearMonth LIMIT 10 Note: strftime('%Y-%m', InvoiceDate) is the SQLite3 equivalent of Year(InvoiceDate) and Month(InvoiceDate)\n   YearMonth SUM(Total)     2009-01 35.64   2009-02 37.62   2009-03 37.62   2009-04 37.62   2009-05 37.62   2009-06 37.62   2009-07 37.62   2009-08 37.62   2009-09 37.62   2009-10 37.62    The total of 37.62 repeats as the invoices were copy-pasted in the DB and only the date changed.\nTop countries by total bought Sales per country\nSELECT BillingCountry, SUM(\"Total\") as total_per_country FROM invoices GROUP BY BillingCountry ORDER BY \"total_per_country\" DESC LIMIT 10    BillingCountry total_per_country     USA 523.06   Canada 303.96   France 195.1   Brazil 190.1   Germany 156.48   United Kingdom 112.86   Czech Republic 90.24   Portugal 77.24   India 75.26   Chile 46.62    Top countries with sales higher than the average WITH average_per_country (avg_per_country) AS ( SELECT AVG(\"Total\") as avg_per_country FROM invoices ) SELECT BillingCountry, AVG(\"Total\") as total_per_country FROM invoices, average_per_country GROUP BY BillingCountry HAVING (total_per_country  average_per_country.avg_per_country)    BillingCountry total_per_country     Austria 6.08857142857143   Chile 6.66   Czech Republic 6.44571428571429   Finland 5.94571428571429   Hungary 6.51714285714286   India 5.78923076923077   Ireland 6.51714285714286   Netherlands 5.80285714285714   Norway 5.66   USA 5.74791208791209    ","wordCount":"640","inLanguage":"en","image":"https://sorinbiriescu.github.io/projects/sales_performance_chinook/cover_chinook_sql.png","datePublished":"0001-01-01T00:00:00Z","dateModified":"0001-01-01T00:00:00Z","mainEntityOfPage":{"@type":"WebPage","@id":"https://sorinbiriescu.github.io/en/projects/sql_queries/"},"publisher":{"@type":"Organization","name":"Sorin BIRIESCU","logo":{"@type":"ImageObject","url":"https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E"}}}</script></head><body id=top><script>if(localStorage.getItem("pref-theme")==="dark"){document.body.classList.add('dark');}</script><header class=header><nav class=nav><div class=logo><a href=https://sorinbiriescu.github.io/en/ accesskey=h title="Sorin BIRIESCU (Alt + H)">Sorin BIRIESCU</a>
-<span class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button><ul class=lang-switch><li>|</li><li><a href=https://sorinbiriescu.github.io/fr/ title="🇫🇷 En Français" aria-label=":fr: En Français">🇫🇷 En Français</a></li></ul></span></div><ul id=menu><li><a href=https://sorinbiriescu.github.io/en/cv/cv title=CV><span>CV</span></a></li><li><a href=https://sorinbiriescu.github.io/en/projects/ title=Projects><span>Projects</span></a></li><li><a href=https://sorinbiriescu.github.io/en/skills title="Skill List"><span>Skill List</span></a></li><li><a href=https://sorinbiriescu.github.io/en/tags/ title="Skill Tags"><span>Skill Tags</span></a></li><li><a href=https://sorinbiriescu.github.io/en/contact_en title=Contact><span>Contact</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><h1 class=post-title>Sales performance at Chinook (Data Analysis with SQL queries)</h1><div class=post-description>Data analysis (sales performance) done with SQL on a fictious company</div><div class=post-meta>4 min</div></header><figure class=entry-cover><img loading=lazy src=https://sorinbiriescu.github.io/projects/sales_performance_chinook/cover_chinook_sql.png alt><p></p></figure><div class=toc><details><summary accesskey=c title="(Alt + C)"><span class=details>Table of Contents</span></summary><div class=inner><ul><li><a href=#examples-of-artists-and-albums aria-label="Examples of artists and albums">Examples of artists and albums</a><ul><li><a href=#top-bands-with-the-most-number-of-albums aria-label="Top bands with the most number of albums">Top bands with the most number of albums</a></li></ul></li><li><a href=#top-spenders aria-label="Top spenders">Top spenders</a></li><li><a href=#top-sales-by-month aria-label="Top sales by month">Top sales by month</a></li><li><a href=#top-countries-by-total-bought aria-label="Top countries by total bought">Top countries by total bought</a></li><li><a href=#top-countries-with-sales-higher-than-the-average aria-label="Top countries with sales higher than the average">Top countries with sales higher than the average</a></li></ul></div></details></div><div class=post-content><p>This is a showcase of SQL queries run on a fictious database for a record selling company called <em><strong>Chinook Records</strong></em>.</p><p>I choose a SQLite 3 database as:</p><ul><li>it&rsquo;s really simple to run on a simple computer, not needing to install a full solution such as MySQL, PostgreSQL etc.</li><li>although there are certain functionalities not available on SQLlite, most of the SQL queries can be run on other variants</li></ul><p>The example database was downloaded from the website <a href=https://www.sqlitetutorial.net/sqlite-sample-database/>SQLite Sample Database</a> and below is the diagram of the DB.</p><p><img loading=lazy src=/projects/sales_performance_chinook/db_diagram.png alt="DB diagram"></p><p>The database is fairly simple:</p><ul><li>we have songs (tracks) that we sell to customers</li><li>songs / tracks belong to an album, an artist and a genre and they have a specific type (ex: MP3, AAC etc.)</li><li>customers buy tracks and we invoice them</li><li>one invoice will have one or several lines corresponding to the number of tracks that we sold to that customer.</li></ul><p>We&rsquo;ll query the DB to get some insights into this company. Note that most of the queries are short, they&rsquo;re only meant to go through certain operations:</p><ul><li>SELECT statement</li><li>LIMIT results</li><li>Filter, Group and order results</li><li>Subqueries</li><li>JOINS</li><li>String formatting</li><li>Date operations</li><li>CTE</li></ul><h2 id=examples-of-artists-and-albums>Examples of artists and albums<a hidden class=anchor aria-hidden=true href=#examples-of-artists-and-albums>#</a></h2><p>Let&rsquo;s see first what we&rsquo;re selling and to whom we are selling to.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> <span style=color:#f92672>*</span>
+<!doctype html><html lang=en dir=auto>
+<head><meta charset=utf-8>
+<meta http-equiv=x-ua-compatible content="IE=edge">
+<meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no">
+<meta name=robots content="index, follow">
+<title>Sales performance at Chinook (Data Analysis with SQL queries) | Sorin BIRIESCU</title>
+<meta name=keywords content="SQL">
+<meta name=description content="Data analysis (sales performance) done with SQL on a fictious company">
+<meta name=author content>
+<link rel=canonical href=https://sorinbiriescu.github.io/en/projects/sql_queries/>
+<meta name=google-site-verification content="XYZabc">
+<link crossorigin=anonymous href=/assets/css/stylesheet.min.6f60056d44d3f7eb69a4bc6c332b59960f3a995802bded244750232f33713c49.css integrity="sha256-b2AFbUTT9+tppLxsMytZlg86mVgCve0kR1AjLzNxPEk=" rel="preload stylesheet" as=style>
+<script defer crossorigin=anonymous src=/assets/js/highlight.min.7680afc38aa6b15ddf158a4f3780b7b1f7dde7e91d26f073e6229bb7a0793c92.js integrity="sha256-doCvw4qmsV3fFYpPN4C3sffd5+kdJvBz5iKbt6B5PJI=" onload=hljs.initHighlightingOnLoad()></script>
+<link rel=icon href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E>
+<link rel=icon type=image/png sizes=16x16 href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E>
+<link rel=icon type=image/png sizes=32x32 href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E>
+<link rel=apple-touch-icon href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E>
+<link rel=mask-icon href=https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E>
+<meta name=theme-color content="#2e2e33">
+<meta name=msapplication-TileColor content="#2e2e33">
+<meta name=generator content="Hugo 0.88.1">
+<link rel=alternate hreflang=en href=https://sorinbiriescu.github.io/en/projects/sql_queries/>
+<noscript>
+<style>#theme-toggle,.top-link{display:none}</style>
+</noscript>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-T0XSNPZVZF"></script>
+<script>var doNotTrack=!1;if(!doNotTrack){window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date),gtag('config','G-T0XSNPZVZF',{anonymize_ip:!1})}</script>
+<meta property="og:title" content="Sales performance at Chinook (Data Analysis with SQL queries)">
+<meta property="og:description" content="Data analysis (sales performance) done with SQL on a fictious company">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://sorinbiriescu.github.io/en/projects/sql_queries/">
+<meta property="og:image" content="https://sorinbiriescu.github.io/projects/sales_performance_chinook/cover_chinook_sql.png"><meta property="article:section" content="projects">
+<meta property="og:site_name" content="Sorin BIRIESCU">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://sorinbiriescu.github.io/projects/sales_performance_chinook/cover_chinook_sql.png">
+<meta name=twitter:title content="Sales performance at Chinook (Data Analysis with SQL queries)">
+<meta name=twitter:description content="Data analysis (sales performance) done with SQL on a fictious company">
+<script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":4,"name":"Sales performance at Chinook (Data Analysis with SQL queries)","item":"https://sorinbiriescu.github.io/en/projects/sql_queries/"}]}</script>
+<script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Sales performance at Chinook (Data Analysis with SQL queries)","name":"Sales performance at Chinook (Data Analysis with SQL queries)","description":"Data analysis (sales performance) done with SQL on a fictious company","keywords":["SQL"],"articleBody":"This is a showcase of SQL queries run on a fictious database for a record selling company called Chinook Records.\nI choose a SQLite 3 database as:\n it’s really simple to run on a simple computer, not needing to install a full solution such as MySQL, PostgreSQL etc. although there are certain functionalities not available on SQLlite, most of the SQL queries can be run on other variants  The example database was downloaded from the website SQLite Sample Database and below is the diagram of the DB.\nThe database is fairly simple:\n we have songs (tracks) that we sell to customers songs / tracks belong to an album, an artist and a genre and they have a specific type (ex: MP3, AAC etc.) customers buy tracks and we invoice them one invoice will have one or several lines corresponding to the number of tracks that we sold to that customer.  We’ll query the DB to get some insights into this company. Note that most of the queries are short, they’re only meant to go through certain operations:\n SELECT statement LIMIT results Filter, Group and order results Subqueries JOINS String formatting Date operations CTE  Examples of artists and albums Let’s see first what we’re selling and to whom we are selling to.\nSELECT * FROM artists LIMIT 10    ArtistId Name     1 AC/DC   2 Accept   3 Aerosmith   4 Alanis Morissette   5 Alice In Chains   6 Antônio Carlos Jobim   7 Apocalyptica   8 Audioslave   9 BackBeat   10 Billy Cobham    Some of our customers\nSELECT FirstName, LastName, Country FROM customers LIMIT 10    FirstName LastName Country     Luís Gonçalves Brazil   Leonie Köhler Germany   François Tremblay Canada   Bjørn Hansen Norway   František Wichterlová Czech Republic   Helena Holý Czech Republic   Astrid Gruber Austria   Daan Peeters Belgium   Kara Nielsen Denmark   Eduardo Martins Brazil    How about only the customers in Brazil?\nSELECT FirstName, LastName, Country FROM customers WHERE Country = \"Brazil\" LIMIT 10    FirstName LastName Country     Luís Gonçalves Brazil   Eduardo Martins Brazil   Alexandre Rocha Brazil   Roberto Almeida Brazil   Fernanda Ramos Brazil    Top bands with the most number of albums SELECT Name, total_albums FROM artists LEFT JOIN ( SELECT ArtistId, count(ArtistId) AS total_albums FROM albums GROUP BY ArtistId ) AS total_albums ON artists.ArtistId = total_albums.ArtistId ORDER BY total_albums DESC LIMIT 10    Name total_albums     Iron Maiden 21   Led Zeppelin 14   Deep Purple 11   Metallica 10   U2 10   Ozzy Osbourne 6   Pearl Jam 5   Various Artists 4   Faith No More 4   Foo Fighters 4    Top spenders Let’s get a list of our top spenders.\nSELECT Sum(I.Total) as Total_purchased, C.FirstName, UPPER(C.LastName) FROM invoices I, customers C WHERE I.CustomerId = C.CustomerId GROUP BY C.LastName ORDER BY Total_purchased DESC LIMIT 10    Total_purchased FirstName UPPER(C.LastName)     49.62 Helena HOLý   47.62 Richard CUNNINGHAM   46.62 Luis ROJAS   45.62 Hugh O’REILLY   45.62 Ladislav KOVáCS   43.62 Julia BARNETT   43.62 Fynn ZIMMERMANN   43.62 Frank RALSTON   42.62 Victor STEVENS   42.62 Astrid GRUBER    Top sales by month SELECT strftime('%Y-%m', InvoiceDate) as YearMonth, SUM(Total) FROM invoices GROUP BY YearMonth LIMIT 10 Note: strftime('%Y-%m', InvoiceDate) is the SQLite3 equivalent of Year(InvoiceDate) and Month(InvoiceDate)\n   YearMonth SUM(Total)     2009-01 35.64   2009-02 37.62   2009-03 37.62   2009-04 37.62   2009-05 37.62   2009-06 37.62   2009-07 37.62   2009-08 37.62   2009-09 37.62   2009-10 37.62    The total of 37.62 repeats as the invoices were copy-pasted in the DB and only the date changed.\nTop countries by total bought Sales per country\nSELECT BillingCountry, SUM(\"Total\") as total_per_country FROM invoices GROUP BY BillingCountry ORDER BY \"total_per_country\" DESC LIMIT 10    BillingCountry total_per_country     USA 523.06   Canada 303.96   France 195.1   Brazil 190.1   Germany 156.48   United Kingdom 112.86   Czech Republic 90.24   Portugal 77.24   India 75.26   Chile 46.62    Top countries with sales higher than the average WITH average_per_country (avg_per_country) AS ( SELECT AVG(\"Total\") as avg_per_country FROM invoices ) SELECT BillingCountry, AVG(\"Total\") as total_per_country FROM invoices, average_per_country GROUP BY BillingCountry HAVING (total_per_country  average_per_country.avg_per_country)    BillingCountry total_per_country     Austria 6.08857142857143   Chile 6.66   Czech Republic 6.44571428571429   Finland 5.94571428571429   Hungary 6.51714285714286   India 5.78923076923077   Ireland 6.51714285714286   Netherlands 5.80285714285714   Norway 5.66   USA 5.74791208791209    ","wordCount":"640","inLanguage":"en","image":"https://sorinbiriescu.github.io/projects/sales_performance_chinook/cover_chinook_sql.png","datePublished":"0001-01-01T00:00:00Z","dateModified":"0001-01-01T00:00:00Z","mainEntityOfPage":{"@type":"WebPage","@id":"https://sorinbiriescu.github.io/en/projects/sql_queries/"},"publisher":{"@type":"Organization","name":"Sorin BIRIESCU","logo":{"@type":"ImageObject","url":"https://sorinbiriescu.github.io/%3Clink%20/%20abs%20url%3E"}}}</script>
+</head>
+<body id=top>
+<script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add('dark')</script>
+<header class=header>
+<nav class=nav>
+<div class=logo>
+<a href=https://sorinbiriescu.github.io/en/ accesskey=h title="Sorin BIRIESCU (Alt + H)">Sorin BIRIESCU</a>
+<span class=logo-switches>
+<button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
+<ul class=lang-switch><li>|</li>
+<li>
+<a href=https://sorinbiriescu.github.io/fr/ title="🇫🇷 En Français" aria-label=":fr: En Français">🇫🇷 En Français</a>
+</li>
+</ul>
+</span>
+</div>
+<ul id=menu>
+<li>
+<a href=https://sorinbiriescu.github.io/en/cv/cv title=CV>
+<span>CV</span>
+</a>
+</li>
+<li>
+<a href=https://sorinbiriescu.github.io/en/projects/ title=Projects>
+<span>Projects</span>
+</a>
+</li>
+<li>
+<a href=https://sorinbiriescu.github.io/en/skills title="Skill List">
+<span>Skill List</span>
+</a>
+</li>
+<li>
+<a href=https://sorinbiriescu.github.io/en/tags/ title="Skill Tags">
+<span>Skill Tags</span>
+</a>
+</li>
+<li>
+<a href=https://sorinbiriescu.github.io/en/contact_en title=Contact>
+<span>Contact</span>
+</a>
+</li>
+</ul>
+</nav>
+</header>
+<main class=main>
+<article class=post-single>
+<header class=post-header>
+<h1 class=post-title>
+Sales performance at Chinook (Data Analysis with SQL queries)
+</h1>
+<div class=post-description>
+Data analysis (sales performance) done with SQL on a fictious company
+</div>
+<div class=post-meta>4 min
+</div>
+</header>
+<figure class=entry-cover><img loading=lazy src=https://sorinbiriescu.github.io/projects/sales_performance_chinook/cover_chinook_sql.png alt>
+<p></p>
+</figure><div class=toc>
+<details>
+<summary accesskey=c title="(Alt + C)">
+<span class=details>Table of Contents</span>
+</summary>
+<div class=inner><ul>
+<li>
+<a href=#examples-of-artists-and-albums aria-label="Examples of artists and albums">Examples of artists and albums</a><ul>
+<li>
+<a href=#top-bands-with-the-most-number-of-albums aria-label="Top bands with the most number of albums">Top bands with the most number of albums</a></li></ul>
+</li>
+<li>
+<a href=#top-spenders aria-label="Top spenders">Top spenders</a></li>
+<li>
+<a href=#top-sales-by-month aria-label="Top sales by month">Top sales by month</a></li>
+<li>
+<a href=#top-countries-by-total-bought aria-label="Top countries by total bought">Top countries by total bought</a></li>
+<li>
+<a href=#top-countries-with-sales-higher-than-the-average aria-label="Top countries with sales higher than the average">Top countries with sales higher than the average</a>
+</li>
+</ul>
+</div>
+</details>
+</div>
+<div class=post-content><p>This is a showcase of SQL queries run on a fictious database for a record selling company called <em><strong>Chinook Records</strong></em>.</p>
+<p>I choose a SQLite 3 database as:</p>
+<ul>
+<li>it&rsquo;s really simple to run on a simple computer, not needing to install a full solution such as MySQL, PostgreSQL etc.</li>
+<li>although there are certain functionalities not available on SQLlite, most of the SQL queries can be run on other variants</li>
+</ul>
+<p>The example database was downloaded from the website <a href=https://www.sqlitetutorial.net/sqlite-sample-database/>SQLite Sample Database</a> and below is the diagram of the DB.</p>
+<p><img loading=lazy src=/projects/sales_performance_chinook/db_diagram.png alt="DB diagram">
+</p>
+<p>The database is fairly simple:</p>
+<ul>
+<li>we have songs (tracks) that we sell to customers</li>
+<li>songs / tracks belong to an album, an artist and a genre and they have a specific type (ex: MP3, AAC etc.)</li>
+<li>customers buy tracks and we invoice them</li>
+<li>one invoice will have one or several lines corresponding to the number of tracks that we sold to that customer.</li>
+</ul>
+<p>We&rsquo;ll query the DB to get some insights into this company. Note that most of the queries are short, they&rsquo;re only meant to go through certain operations:</p>
+<ul>
+<li>SELECT statement</li>
+<li>LIMIT results</li>
+<li>Filter, Group and order results</li>
+<li>Subqueries</li>
+<li>JOINS</li>
+<li>String formatting</li>
+<li>Date operations</li>
+<li>CTE</li>
+</ul>
+<h2 id=examples-of-artists-and-albums>Examples of artists and albums<a hidden class=anchor aria-hidden=true href=#examples-of-artists-and-albums>#</a></h2>
+<p>Let&rsquo;s see first what we&rsquo;re selling and to whom we are selling to.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> <span style=color:#f92672>*</span>
 <span style=color:#66d9ef>FROM</span> artists
 <span style=color:#66d9ef>LIMIT</span> <span style=color:#ae81ff>10</span>
-</code></pre></div><table><thead><tr><th>ArtistId</th><th>Name</th></tr></thead><tbody><tr><td>1</td><td>AC/DC</td></tr><tr><td>2</td><td>Accept</td></tr><tr><td>3</td><td>Aerosmith</td></tr><tr><td>4</td><td>Alanis Morissette</td></tr><tr><td>5</td><td>Alice In Chains</td></tr><tr><td>6</td><td>Antônio Carlos Jobim</td></tr><tr><td>7</td><td>Apocalyptica</td></tr><tr><td>8</td><td>Audioslave</td></tr><tr><td>9</td><td>BackBeat</td></tr><tr><td>10</td><td>Billy Cobham</td></tr></tbody></table><p>Some of our customers</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> FirstName, LastName, Country
+</code></pre></div><table>
+<thead>
+<tr>
+<th>ArtistId</th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>AC/DC</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Accept</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Aerosmith</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Alanis Morissette</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Alice In Chains</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Antônio Carlos Jobim</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Apocalyptica</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Audioslave</td>
+</tr>
+<tr>
+<td>9</td>
+<td>BackBeat</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Billy Cobham</td>
+</tr>
+</tbody>
+</table>
+<p>Some of our customers</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> FirstName, LastName, Country
 <span style=color:#66d9ef>FROM</span> customers
 <span style=color:#66d9ef>LIMIT</span> <span style=color:#ae81ff>10</span>
-</code></pre></div><table><thead><tr><th>FirstName</th><th>LastName</th><th>Country</th></tr></thead><tbody><tr><td>Luís</td><td>Gonçalves</td><td>Brazil</td></tr><tr><td>Leonie</td><td>Köhler</td><td>Germany</td></tr><tr><td>François</td><td>Tremblay</td><td>Canada</td></tr><tr><td>Bjørn</td><td>Hansen</td><td>Norway</td></tr><tr><td>František</td><td>Wichterlová</td><td>Czech Republic</td></tr><tr><td>Helena</td><td>Holý</td><td>Czech Republic</td></tr><tr><td>Astrid</td><td>Gruber</td><td>Austria</td></tr><tr><td>Daan</td><td>Peeters</td><td>Belgium</td></tr><tr><td>Kara</td><td>Nielsen</td><td>Denmark</td></tr><tr><td>Eduardo</td><td>Martins</td><td>Brazil</td></tr></tbody></table><p>How about only the customers in Brazil?</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> FirstName, LastName, Country
+</code></pre></div><table>
+<thead>
+<tr>
+<th>FirstName</th>
+<th>LastName</th>
+<th>Country</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Luís</td>
+<td>Gonçalves</td>
+<td>Brazil</td>
+</tr>
+<tr>
+<td>Leonie</td>
+<td>Köhler</td>
+<td>Germany</td>
+</tr>
+<tr>
+<td>François</td>
+<td>Tremblay</td>
+<td>Canada</td>
+</tr>
+<tr>
+<td>Bjørn</td>
+<td>Hansen</td>
+<td>Norway</td>
+</tr>
+<tr>
+<td>František</td>
+<td>Wichterlová</td>
+<td>Czech Republic</td>
+</tr>
+<tr>
+<td>Helena</td>
+<td>Holý</td>
+<td>Czech Republic</td>
+</tr>
+<tr>
+<td>Astrid</td>
+<td>Gruber</td>
+<td>Austria</td>
+</tr>
+<tr>
+<td>Daan</td>
+<td>Peeters</td>
+<td>Belgium</td>
+</tr>
+<tr>
+<td>Kara</td>
+<td>Nielsen</td>
+<td>Denmark</td>
+</tr>
+<tr>
+<td>Eduardo</td>
+<td>Martins</td>
+<td>Brazil</td>
+</tr>
+</tbody>
+</table>
+<p>How about only the customers in Brazil?</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> FirstName, LastName, Country
 <span style=color:#66d9ef>FROM</span> customers
 <span style=color:#66d9ef>WHERE</span> Country <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;Brazil&#34;</span>
 <span style=color:#66d9ef>LIMIT</span> <span style=color:#ae81ff>10</span>
-</code></pre></div><table><thead><tr><th>FirstName</th><th>LastName</th><th>Country</th></tr></thead><tbody><tr><td>Luís</td><td>Gonçalves</td><td>Brazil</td></tr><tr><td>Eduardo</td><td>Martins</td><td>Brazil</td></tr><tr><td>Alexandre</td><td>Rocha</td><td>Brazil</td></tr><tr><td>Roberto</td><td>Almeida</td><td>Brazil</td></tr><tr><td>Fernanda</td><td>Ramos</td><td>Brazil</td></tr></tbody></table><h3 id=top-bands-with-the-most-number-of-albums>Top bands with the most number of albums<a hidden class=anchor aria-hidden=true href=#top-bands-with-the-most-number-of-albums>#</a></h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> Name, total_albums
+</code></pre></div><table>
+<thead>
+<tr>
+<th>FirstName</th>
+<th>LastName</th>
+<th>Country</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Luís</td>
+<td>Gonçalves</td>
+<td>Brazil</td>
+</tr>
+<tr>
+<td>Eduardo</td>
+<td>Martins</td>
+<td>Brazil</td>
+</tr>
+<tr>
+<td>Alexandre</td>
+<td>Rocha</td>
+<td>Brazil</td>
+</tr>
+<tr>
+<td>Roberto</td>
+<td>Almeida</td>
+<td>Brazil</td>
+</tr>
+<tr>
+<td>Fernanda</td>
+<td>Ramos</td>
+<td>Brazil</td>
+</tr>
+</tbody>
+</table>
+<h3 id=top-bands-with-the-most-number-of-albums>Top bands with the most number of albums<a hidden class=anchor aria-hidden=true href=#top-bands-with-the-most-number-of-albums>#</a></h3>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> Name, total_albums
 <span style=color:#66d9ef>FROM</span> artists
 <span style=color:#66d9ef>LEFT</span> <span style=color:#66d9ef>JOIN</span>
 	( 
@@ -20,7 +321,59 @@
 <span style=color:#66d9ef>ON</span> artists.ArtistId <span style=color:#f92672>=</span> total_albums.ArtistId
 <span style=color:#66d9ef>ORDER</span> <span style=color:#66d9ef>BY</span> total_albums <span style=color:#66d9ef>DESC</span>
 <span style=color:#66d9ef>LIMIT</span> <span style=color:#ae81ff>10</span>
-</code></pre></div><table><thead><tr><th>Name</th><th>total_albums</th></tr></thead><tbody><tr><td>Iron Maiden</td><td>21</td></tr><tr><td>Led Zeppelin</td><td>14</td></tr><tr><td>Deep Purple</td><td>11</td></tr><tr><td>Metallica</td><td>10</td></tr><tr><td>U2</td><td>10</td></tr><tr><td>Ozzy Osbourne</td><td>6</td></tr><tr><td>Pearl Jam</td><td>5</td></tr><tr><td>Various Artists</td><td>4</td></tr><tr><td>Faith No More</td><td>4</td></tr><tr><td>Foo Fighters</td><td>4</td></tr></tbody></table><h2 id=top-spenders>Top spenders<a hidden class=anchor aria-hidden=true href=#top-spenders>#</a></h2><p>Let&rsquo;s get a list of our top spenders.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> <span style=color:#66d9ef>Sum</span>(I.Total) <span style=color:#66d9ef>as</span> Total_purchased,
+</code></pre></div><table>
+<thead>
+<tr>
+<th>Name</th>
+<th>total_albums</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Iron Maiden</td>
+<td>21</td>
+</tr>
+<tr>
+<td>Led Zeppelin</td>
+<td>14</td>
+</tr>
+<tr>
+<td>Deep Purple</td>
+<td>11</td>
+</tr>
+<tr>
+<td>Metallica</td>
+<td>10</td>
+</tr>
+<tr>
+<td>U2</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Ozzy Osbourne</td>
+<td>6</td>
+</tr>
+<tr>
+<td>Pearl Jam</td>
+<td>5</td>
+</tr>
+<tr>
+<td>Various Artists</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Faith No More</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Foo Fighters</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<h2 id=top-spenders>Top spenders<a hidden class=anchor aria-hidden=true href=#top-spenders>#</a></h2>
+<p>Let&rsquo;s get a list of our top spenders.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> <span style=color:#66d9ef>Sum</span>(I.Total) <span style=color:#66d9ef>as</span> Total_purchased,
 	<span style=color:#66d9ef>C</span>.FirstName,
 	<span style=color:#66d9ef>UPPER</span>(<span style=color:#66d9ef>C</span>.LastName)
 <span style=color:#66d9ef>FROM</span> invoices I, customers <span style=color:#66d9ef>C</span>
@@ -28,17 +381,184 @@
 <span style=color:#66d9ef>GROUP</span> <span style=color:#66d9ef>BY</span> <span style=color:#66d9ef>C</span>.LastName
 <span style=color:#66d9ef>ORDER</span> <span style=color:#66d9ef>BY</span> Total_purchased <span style=color:#66d9ef>DESC</span>
 <span style=color:#66d9ef>LIMIT</span> <span style=color:#ae81ff>10</span>
-</code></pre></div><table><thead><tr><th>Total_purchased</th><th>FirstName</th><th>UPPER(C.LastName)</th></tr></thead><tbody><tr><td>49.62</td><td>Helena</td><td>HOLý</td></tr><tr><td>47.62</td><td>Richard</td><td>CUNNINGHAM</td></tr><tr><td>46.62</td><td>Luis</td><td>ROJAS</td></tr><tr><td>45.62</td><td>Hugh</td><td>O&rsquo;REILLY</td></tr><tr><td>45.62</td><td>Ladislav</td><td>KOVáCS</td></tr><tr><td>43.62</td><td>Julia</td><td>BARNETT</td></tr><tr><td>43.62</td><td>Fynn</td><td>ZIMMERMANN</td></tr><tr><td>43.62</td><td>Frank</td><td>RALSTON</td></tr><tr><td>42.62</td><td>Victor</td><td>STEVENS</td></tr><tr><td>42.62</td><td>Astrid</td><td>GRUBER</td></tr></tbody></table><h2 id=top-sales-by-month>Top sales by month<a hidden class=anchor aria-hidden=true href=#top-sales-by-month>#</a></h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> strftime(<span style=color:#e6db74>&#39;%Y-%m&#39;</span>, InvoiceDate) <span style=color:#66d9ef>as</span> YearMonth,
+</code></pre></div><table>
+<thead>
+<tr>
+<th>Total_purchased</th>
+<th>FirstName</th>
+<th>UPPER(C.LastName)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>49.62</td>
+<td>Helena</td>
+<td>HOLý</td>
+</tr>
+<tr>
+<td>47.62</td>
+<td>Richard</td>
+<td>CUNNINGHAM</td>
+</tr>
+<tr>
+<td>46.62</td>
+<td>Luis</td>
+<td>ROJAS</td>
+</tr>
+<tr>
+<td>45.62</td>
+<td>Hugh</td>
+<td>O&rsquo;REILLY</td>
+</tr>
+<tr>
+<td>45.62</td>
+<td>Ladislav</td>
+<td>KOVáCS</td>
+</tr>
+<tr>
+<td>43.62</td>
+<td>Julia</td>
+<td>BARNETT</td>
+</tr>
+<tr>
+<td>43.62</td>
+<td>Fynn</td>
+<td>ZIMMERMANN</td>
+</tr>
+<tr>
+<td>43.62</td>
+<td>Frank</td>
+<td>RALSTON</td>
+</tr>
+<tr>
+<td>42.62</td>
+<td>Victor</td>
+<td>STEVENS</td>
+</tr>
+<tr>
+<td>42.62</td>
+<td>Astrid</td>
+<td>GRUBER</td>
+</tr>
+</tbody>
+</table>
+<h2 id=top-sales-by-month>Top sales by month<a hidden class=anchor aria-hidden=true href=#top-sales-by-month>#</a></h2>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> strftime(<span style=color:#e6db74>&#39;%Y-%m&#39;</span>, InvoiceDate) <span style=color:#66d9ef>as</span> YearMonth,
 	<span style=color:#66d9ef>SUM</span>(Total)
 <span style=color:#66d9ef>FROM</span> invoices
 <span style=color:#66d9ef>GROUP</span> <span style=color:#66d9ef>BY</span> YearMonth
 <span style=color:#66d9ef>LIMIT</span> <span style=color:#ae81ff>10</span>
-</code></pre></div><p>Note: <code>strftime('%Y-%m', InvoiceDate)</code> is the SQLite3 equivalent of <code>Year(InvoiceDate)</code> and <code>Month(InvoiceDate)</code></p><table><thead><tr><th>YearMonth</th><th>SUM(Total)</th></tr></thead><tbody><tr><td>2009-01</td><td>35.64</td></tr><tr><td>2009-02</td><td>37.62</td></tr><tr><td>2009-03</td><td>37.62</td></tr><tr><td>2009-04</td><td>37.62</td></tr><tr><td>2009-05</td><td>37.62</td></tr><tr><td>2009-06</td><td>37.62</td></tr><tr><td>2009-07</td><td>37.62</td></tr><tr><td>2009-08</td><td>37.62</td></tr><tr><td>2009-09</td><td>37.62</td></tr><tr><td>2009-10</td><td>37.62</td></tr></tbody></table><p>The total of 37.62 repeats as the invoices were copy-pasted in the DB and only the date changed.</p><h2 id=top-countries-by-total-bought>Top countries by total bought<a hidden class=anchor aria-hidden=true href=#top-countries-by-total-bought>#</a></h2><p>Sales per country</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> BillingCountry, <span style=color:#66d9ef>SUM</span>(<span style=color:#e6db74>&#34;Total&#34;</span>) <span style=color:#66d9ef>as</span> total_per_country
+</code></pre></div><p>Note: <code>strftime('%Y-%m', InvoiceDate)</code> is the SQLite3 equivalent of <code>Year(InvoiceDate)</code> and <code>Month(InvoiceDate)</code></p>
+<table>
+<thead>
+<tr>
+<th>YearMonth</th>
+<th>SUM(Total)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2009-01</td>
+<td>35.64</td>
+</tr>
+<tr>
+<td>2009-02</td>
+<td>37.62</td>
+</tr>
+<tr>
+<td>2009-03</td>
+<td>37.62</td>
+</tr>
+<tr>
+<td>2009-04</td>
+<td>37.62</td>
+</tr>
+<tr>
+<td>2009-05</td>
+<td>37.62</td>
+</tr>
+<tr>
+<td>2009-06</td>
+<td>37.62</td>
+</tr>
+<tr>
+<td>2009-07</td>
+<td>37.62</td>
+</tr>
+<tr>
+<td>2009-08</td>
+<td>37.62</td>
+</tr>
+<tr>
+<td>2009-09</td>
+<td>37.62</td>
+</tr>
+<tr>
+<td>2009-10</td>
+<td>37.62</td>
+</tr>
+</tbody>
+</table>
+<p>The total of 37.62 repeats as the invoices were copy-pasted in the DB and only the date changed.</p>
+<h2 id=top-countries-by-total-bought>Top countries by total bought<a hidden class=anchor aria-hidden=true href=#top-countries-by-total-bought>#</a></h2>
+<p>Sales per country</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>SELECT</span> BillingCountry, <span style=color:#66d9ef>SUM</span>(<span style=color:#e6db74>&#34;Total&#34;</span>) <span style=color:#66d9ef>as</span> total_per_country
 <span style=color:#66d9ef>FROM</span> invoices
 <span style=color:#66d9ef>GROUP</span> <span style=color:#66d9ef>BY</span> BillingCountry
 <span style=color:#66d9ef>ORDER</span> <span style=color:#66d9ef>BY</span> <span style=color:#e6db74>&#34;total_per_country&#34;</span> <span style=color:#66d9ef>DESC</span>
 <span style=color:#66d9ef>LIMIT</span> <span style=color:#ae81ff>10</span>
-</code></pre></div><table><thead><tr><th>BillingCountry</th><th>total_per_country</th></tr></thead><tbody><tr><td>USA</td><td>523.06</td></tr><tr><td>Canada</td><td>303.96</td></tr><tr><td>France</td><td>195.1</td></tr><tr><td>Brazil</td><td>190.1</td></tr><tr><td>Germany</td><td>156.48</td></tr><tr><td>United Kingdom</td><td>112.86</td></tr><tr><td>Czech Republic</td><td>90.24</td></tr><tr><td>Portugal</td><td>77.24</td></tr><tr><td>India</td><td>75.26</td></tr><tr><td>Chile</td><td>46.62</td></tr></tbody></table><h2 id=top-countries-with-sales-higher-than-the-average>Top countries with sales higher than the average<a hidden class=anchor aria-hidden=true href=#top-countries-with-sales-higher-than-the-average>#</a></h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>WITH</span> average_per_country (avg_per_country) <span style=color:#66d9ef>AS</span> (
+</code></pre></div><table>
+<thead>
+<tr>
+<th>BillingCountry</th>
+<th>total_per_country</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>USA</td>
+<td>523.06</td>
+</tr>
+<tr>
+<td>Canada</td>
+<td>303.96</td>
+</tr>
+<tr>
+<td>France</td>
+<td>195.1</td>
+</tr>
+<tr>
+<td>Brazil</td>
+<td>190.1</td>
+</tr>
+<tr>
+<td>Germany</td>
+<td>156.48</td>
+</tr>
+<tr>
+<td>United Kingdom</td>
+<td>112.86</td>
+</tr>
+<tr>
+<td>Czech Republic</td>
+<td>90.24</td>
+</tr>
+<tr>
+<td>Portugal</td>
+<td>77.24</td>
+</tr>
+<tr>
+<td>India</td>
+<td>75.26</td>
+</tr>
+<tr>
+<td>Chile</td>
+<td>46.62</td>
+</tr>
+</tbody>
+</table>
+<h2 id=top-countries-with-sales-higher-than-the-average>Top countries with sales higher than the average<a hidden class=anchor aria-hidden=true href=#top-countries-with-sales-higher-than-the-average>#</a></h2>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-SQL data-lang=SQL><span style=color:#66d9ef>WITH</span> average_per_country (avg_per_country) <span style=color:#66d9ef>AS</span> (
 	<span style=color:#66d9ef>SELECT</span> <span style=color:#66d9ef>AVG</span>(<span style=color:#e6db74>&#34;Total&#34;</span>) <span style=color:#66d9ef>as</span> avg_per_country
 	<span style=color:#66d9ef>FROM</span> invoices
 	)
@@ -47,10 +567,83 @@
 <span style=color:#66d9ef>FROM</span> invoices, average_per_country
 <span style=color:#66d9ef>GROUP</span> <span style=color:#66d9ef>BY</span> BillingCountry
 <span style=color:#66d9ef>HAVING</span> (total_per_country <span style=color:#f92672>&gt;</span> average_per_country.avg_per_country)
-</code></pre></div><table><thead><tr><th>BillingCountry</th><th>total_per_country</th></tr></thead><tbody><tr><td>Austria</td><td>6.08857142857143</td></tr><tr><td>Chile</td><td>6.66</td></tr><tr><td>Czech Republic</td><td>6.44571428571429</td></tr><tr><td>Finland</td><td>5.94571428571429</td></tr><tr><td>Hungary</td><td>6.51714285714286</td></tr><tr><td>India</td><td>5.78923076923077</td></tr><tr><td>Ireland</td><td>6.51714285714286</td></tr><tr><td>Netherlands</td><td>5.80285714285714</td></tr><tr><td>Norway</td><td>5.66</td></tr><tr><td>USA</td><td>5.74791208791209</td></tr></tbody></table></div><footer class=post-footer><ul class=post-tags><li><a href=https://sorinbiriescu.github.io/en/tags/sql/>SQL</a></li></ul><nav class=paginav><a class=prev href=https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/><span class=title>« Prev Page</span><br><span>Call analyzer and estimator</span></a></nav></footer></article></main><footer class=footer><span>&copy; 2021 <a href=https://sorinbiriescu.github.io/en/>Sorin BIRIESCU</a></span>
-<span>Powered by
+</code></pre></div><table>
+<thead>
+<tr>
+<th>BillingCountry</th>
+<th>total_per_country</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Austria</td>
+<td>6.08857142857143</td>
+</tr>
+<tr>
+<td>Chile</td>
+<td>6.66</td>
+</tr>
+<tr>
+<td>Czech Republic</td>
+<td>6.44571428571429</td>
+</tr>
+<tr>
+<td>Finland</td>
+<td>5.94571428571429</td>
+</tr>
+<tr>
+<td>Hungary</td>
+<td>6.51714285714286</td>
+</tr>
+<tr>
+<td>India</td>
+<td>5.78923076923077</td>
+</tr>
+<tr>
+<td>Ireland</td>
+<td>6.51714285714286</td>
+</tr>
+<tr>
+<td>Netherlands</td>
+<td>5.80285714285714</td>
+</tr>
+<tr>
+<td>Norway</td>
+<td>5.66</td>
+</tr>
+<tr>
+<td>USA</td>
+<td>5.74791208791209</td>
+</tr>
+</tbody>
+</table>
+</div>
+<footer class=post-footer>
+<ul class=post-tags>
+<li><a href=https://sorinbiriescu.github.io/en/tags/sql/>SQL</a></li>
+</ul>
+<nav class=paginav>
+<a class=prev href=https://sorinbiriescu.github.io/en/projects/call_analyzer_estimator/>
+<span class=title>« Prev Page</span>
+<br>
+<span>Call analyzer and estimator</span>
+</a>
+</nav>
+</footer>
+</article>
+</main>
+<footer class=footer>
+<span>&copy; 2021 <a href=https://sorinbiriescu.github.io/en/>Sorin BIRIESCU</a></span>
+<span>
+Powered by
 <a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://git.io/hugopapermod rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg></a><script>let menu=document.getElementById('menu')
-menu.scrollLeft=localStorage.getItem("menu-scroll-position");menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft);}
-document.querySelectorAll('a[href^="#"]').forEach(anchor=>{anchor.addEventListener("click",function(e){e.preventDefault();var id=this.getAttribute("href").substr(1);if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({behavior:"smooth"});}else{document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();}
-if(id==="top"){history.replaceState(null,null," ");}else{history.pushState(null,null,`#${id}`);}});});</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){if(document.body.scrollTop>800||document.documentElement.scrollTop>800){mybutton.style.visibility="visible";mybutton.style.opacity="1";}else{mybutton.style.visibility="hidden";mybutton.style.opacity="0";}};</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{if(document.body.className.includes("dark")){document.body.classList.remove('dark');localStorage.setItem("pref-theme",'light');}else{document.body.classList.add('dark');localStorage.setItem("pref-theme",'dark');}})</script></body></html>
+        <a href=https://git.io/hugopapermod rel=noopener target=_blank>PaperMod</a>
+</span>
+</footer>
+<a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a>
+<script>let menu=document.getElementById('menu');menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)},document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener("click",function(b){b.preventDefault();var a=this.getAttribute("href").substr(1);window.matchMedia('(prefers-reduced-motion: reduce)').matches?document.querySelector(`[id='${decodeURIComponent(a)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(a)}']`).scrollIntoView({behavior:"smooth"}),a==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${a}`)})})</script>
+<script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script>
+<script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove('dark'),localStorage.setItem("pref-theme",'light')):(document.body.classList.add('dark'),localStorage.setItem("pref-theme",'dark'))})</script>
+</body>
+</html>
