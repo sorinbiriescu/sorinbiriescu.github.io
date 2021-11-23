@@ -50,6 +50,8 @@
   </url><url>
     <loc>https://sorinbiriescu.github.io/en/cv/cv/</loc>
   </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/dashboard/</loc>
+  </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/dask/</loc>
   </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/data-analysis/</loc>
@@ -59,6 +61,8 @@
     <loc>https://sorinbiriescu.github.io/en/tags/data-wrangling/</loc>
   </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/docker/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/tags/ibm-cognos-analytics/</loc>
   </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/javascript/</loc>
   </url><url>
@@ -111,6 +115,8 @@
                 />
   </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/sql/</loc>
+  </url><url>
+    <loc>https://sorinbiriescu.github.io/en/projects/cognos_dashboard/</loc>
   </url><url>
     <loc>https://sorinbiriescu.github.io/en/tags/</loc>
     <xhtml:link

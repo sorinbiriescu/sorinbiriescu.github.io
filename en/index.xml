@@ -67,5 +67,14 @@ Professional experience Service Delivery Manager ECONOCOM - July 2018 – Sep 20
 Query, scripting and programming languages    Skill Level Relevant project     SQL Intermediate Chinook Sales, Apollo   Python Intermediate Apollo, Call analyzer   HTML / CSS Intermediate Apollo   Javascript Intermediate Apollo   Powershell Intermediate    Git Beginner    Bash Beginner Apollo   Batch Beginner     Relevant packages    Package Language Level Description Relevant project     Pandas Python Advanced Data analysis package Apollo, Call analyzer   Altair Python Intermediate Data visualization package Apollo, Call analyzer   Plotly Python Intermediate Data visualization package Apollo   Prefect Python Beginner Data flow automation Apollo   Dask Python Beginner Parallel computing Apollo   Scikit-learn Python Beginner Machine learning Apollo   React Javascript Intermediate Library Apollo    Products    Skill Level Relevant project     Docker Intermediate Apollo    Data    Area Level Relevant project     Data munging Intermediate Apollo, Call analyzer   Data analysis Intermediate Call analyzer, Chinook Sales, Apollo   Data visualization Intermediate Apollo, Call analyzer   Machine Learning Beginner    AI Beginner     </description>
     </item>
     
+    <item>
+      <title>Stack Overflow Annual Survey - IBM Cognos Analytics Dashboard</title>
+      <link>https://sorinbiriescu.github.io/en/projects/cognos_dashboard/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://sorinbiriescu.github.io/en/projects/cognos_dashboard/</guid>
+      <description>Stack Overflow Annual Survey results</description>
+    </item>
+    
   </channel>
 </rss>
